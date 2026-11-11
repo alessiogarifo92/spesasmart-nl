@@ -29,6 +29,7 @@ flowchart LR
 | Path | Holds | May import |
 |---|---|---|
 | `src/domain/pricing` | Money, units, validity dates, promotion mechanics. Pure functions. | nothing outside `src/domain` |
+| `src/domain/offers` | What the interface derives from a stored offer: state today, labelled estimates, URL filters. Pure functions. | `src/domain` |
 | `src/domain/search` | Query parsing and synonyms. Pure functions. | `src/domain` |
 | `src/domain/matching` | Product matching and classification. Pure functions. | `src/domain` |
 | `src/domain/optimizer` | Basket optimisation. Pure functions. | `src/domain` |

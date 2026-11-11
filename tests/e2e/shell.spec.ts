@@ -1,25 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
+import { expectNoHorizontalScroll, expectTouchTargets } from "./helpers";
 
 const routes = ["/", "/offers", "/list", "/more", "/search"];
-
-async function expectNoHorizontalScroll(page: Page) {
-  const overflow = await page.evaluate(
-    () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
-  );
-  expect(overflow).toBeLessThanOrEqual(0);
-}
-
-/** Every link, button and field a finger can hit must be at least 44 px in both directions. */
-async function expectTouchTargets(page: Page) {
-  const small = await page.evaluate(() =>
-    [...document.querySelectorAll<HTMLElement>("a[href], button, input, select, [role=radio]")]
-      .filter((el) => !el.closest(".sr-only") && el.getClientRects().length > 0)
-      .map((el) => ({ el, box: el.getBoundingClientRect() }))
-      .filter(({ box }) => box.width < 44 || box.height < 44)
-      .map(({ el, box }) => `${el.tagName} "${el.textContent?.trim()}" ${box.width}x${box.height}`),
-  );
-  expect(small).toEqual([]);
-}
 
 test.describe("app shell at 390 px", () => {
   test.use({ viewport: { width: 390, height: 844 } });
