@@ -37,7 +37,7 @@ flowchart LR
 | `src/lib` | Database client and other shared infrastructure. | `src/generated` |
 | `src/server` | Database queries used by pages and route handlers. | `src/domain`, `src/lib` |
 | `src/app` | Pages, layouts, route handlers. | everything above except `src/worker` |
-| `src/components` | React components. | `src/domain` types, `src/i18n` |
+| `src/components` | React components: `shell` (layout, navigation), `ui` (primitives from `DESIGN.md`), `settings`. | `src/domain` types, `src/i18n`, `src/lib` |
 | `src/i18n`, `messages/` | Routing, request config, translations. | — |
 | `prisma/` | Schema, migrations, seed. | — |
 | `tests/integration` | Tests that need the database. | — |

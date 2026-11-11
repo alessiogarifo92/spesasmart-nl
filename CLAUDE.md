@@ -16,4 +16,4 @@ Run / preview (manual gate): `docker compose up -d && npm install && npm run db:
 
 Repo visibility: public (check: `gh api repos/<owner>/<repo> --jq .private`). Private means finite GitHub Actions minutes: `npm run verify` / `make verify` locally is the push gate, and a CI job that never starts follows `test-verification`'s billing fallback.
 
-Needed environment variables / connectors for this project: see `.env.example` (`DATABASE_URL`, `TEST_DATABASE_URL`, `REDIS_URL`, `INGESTION_USER_AGENT`, `INGESTION_ENABLED_ADAPTERS`, `ADMIN_TOKEN`). No `.mcp.json` is committed. Architecture, module boundaries and conventions: `docs/architecture.md`.
+Needed environment variables / connectors for this project: see `.env.example` (`DATABASE_URL`, `TEST_DATABASE_URL`, `REDIS_URL`, `INGESTION_USER_AGENT`, `INGESTION_ENABLED_ADAPTERS`, `ADMIN_TOKEN`). No `.mcp.json` is committed. Architecture, module boundaries and conventions: `docs/architecture.md`. Data model: `docs/data-model.md`. Interface rules (tokens, components, motion, wording): `DESIGN.md`, binding for every UI ticket.

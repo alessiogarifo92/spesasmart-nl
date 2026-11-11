@@ -1,1 +1,69 @@
-{"app":{"name":"SpesaSmart NL","tagline":"Every supermarket offer in one place."}}
+{
+  "app": {
+    "name": "SpesaSmart NL",
+    "tagline": "Every supermarket offer in one place.",
+    "description": "Compare supermarket offers in the Netherlands and find the cheapest route for your shopping list."
+  },
+  "nav": {
+    "label": "Main navigation",
+    "plan": "Plan",
+    "offers": "Offers",
+    "list": "List",
+    "more": "More",
+    "skip": "Skip to content"
+  },
+  "common": {
+    "demoData": "Demo data",
+    "demoDataHint": "Invented sample data, not real prices.",
+    "disclaimer": "The final price and availability are confirmed by the store or the online service.",
+    "estimate": "Estimate.",
+    "toVerify": "To be verified",
+    "back": "Back"
+  },
+  "home": {
+    "title": "Your week",
+    "week": "Week {week}",
+    "planEmptyTitle": "No plan for this week yet",
+    "planEmptyBody": "Put your groceries on the list and see where you pay the least.",
+    "planEmptyAction": "Make your list",
+    "searchLabel": "Search a product, brand or EAN",
+    "searchPlaceholder": "cheap laundry detergent",
+    "searchSubmit": "Search",
+    "watchTitle": "Worth a look this week",
+    "allOffers": "All offers"
+  },
+  "offers": {
+    "title": "Offers",
+    "emptyTitle": "No offers yet",
+    "emptyBody": "Offers appear here as soon as they have been collected."
+  },
+  "list": {
+    "title": "List",
+    "emptyTitle": "Your list is empty",
+    "emptyBody": "Add products from search or from the offers."
+  },
+  "search": {
+    "title": "Search",
+    "emptyTitle": "Search for a product",
+    "emptyBody": "Type a product, brand or EAN to compare prices."
+  },
+  "more": {
+    "title": "More",
+    "language": "Language",
+    "theme": "Appearance",
+    "themeSystem": "System",
+    "themeDark": "Dark",
+    "themeLight": "Light",
+    "installTitle": "Add to your home screen",
+    "installAndroid": "Android: open the browser menu and choose 'Install app'.",
+    "installIos": "iPhone or iPad: tap Share and choose 'Add to Home Screen'.",
+    "aboutTitle": "About this app",
+    "aboutBody": "SpesaSmart NL is a personal project and is not affiliated with the supermarkets it names. Prices come from public offer pages and open data; every offer shows its source and when it was collected.",
+    "privacyTitle": "Privacy",
+    "privacyBody": "No account, no ads, no tracking. Your list belongs to this device."
+  },
+  "offline": {
+    "title": "No connection",
+    "body": "Prices are not kept offline, so you never see an outdated price. Try again once you are back online."
+  }
+}

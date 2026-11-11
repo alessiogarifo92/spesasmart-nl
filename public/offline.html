@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0f1412">
+<title>SpesaSmart NL</title>
+<style>
+:root{color-scheme:dark;--bg:#0f1412;--surface:#18201c;--line:#2a352f;--text:#eaf2ec;--muted:#9db0a4;--accent:#5ee0a0;--on-accent:#0f1412}
+@media (prefers-color-scheme:light){:root{color-scheme:light;--bg:#f3f7f4;--surface:#fff;--line:#d5dfd8;--text:#0f1412;--muted:#4b5d53;--accent:#0b7a45;--on-accent:#fff}}
+body{margin:0;min-height:100dvh;display:flex;align-items:center;justify-content:center;background:var(--bg);color:var(--text);font:14px/20px system-ui,sans-serif;padding:max(20px,env(safe-area-inset-top)) 20px max(20px,env(safe-area-inset-bottom))}
+main{max-width:420px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:20px;display:flex;flex-direction:column;gap:12px}
+h1{margin:0;font-size:20px;line-height:26px}
+p{margin:0;color:var(--muted)}
+a{display:inline-flex;align-items:center;justify-content:center;min-height:44px;padding:0 16px;border-radius:12px;background:var(--accent);color:var(--on-accent);font-weight:600;text-decoration:none;align-self:flex-start}
+</style>
+</head>
+<body>
+<main>
+<h1 id="title">Geen verbinding</h1>
+<p id="body">Prijzen worden niet offline bewaard, zodat je nooit een verouderde prijs ziet. Probeer het opnieuw zodra je weer online bent.</p>
+<a id="retry" href="">↻</a>
+</main>
+<script id="texts" type="application/json">
+{
+  "en": {
+    "title": "No connection",
+    "body": "Prices are not kept offline, so you never see an outdated price. Try again once you are back online."
+  },
+  "it": {
+    "title": "Nessuna connessione",
+    "body": "I prezzi non vengono conservati offline, così non vedi mai un prezzo superato. Riprova quando torni online."
+  }
+}
+</script>
+<script>
+(function(){var m=/^\/(en|it)(\/|$)/.exec(location.pathname);if(!m)return;var t=JSON.parse(document.getElementById("texts").textContent)[m[1]];document.documentElement.lang=m[1];document.getElementById("title").textContent=t.title;document.getElementById("body").textContent=t.body})();
+</script>
+</body>
+</html>

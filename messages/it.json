@@ -1,1 +1,69 @@
-{"app":{"name":"SpesaSmart NL","tagline":"Tutte le offerte dei supermercati in un solo posto."}}
+{
+  "app": {
+    "name": "SpesaSmart NL",
+    "tagline": "Tutte le offerte dei supermercati in un solo posto.",
+    "description": "Confronta le offerte dei supermercati nei Paesi Bassi e trova il percorso più economico per la tua lista della spesa."
+  },
+  "nav": {
+    "label": "Navigazione principale",
+    "plan": "Piano",
+    "offers": "Offerte",
+    "list": "Lista",
+    "more": "Altro",
+    "skip": "Vai al contenuto"
+  },
+  "common": {
+    "demoData": "Dati demo",
+    "demoDataHint": "Dati di esempio inventati, non prezzi reali.",
+    "disclaimer": "Il prezzo finale e la disponibilità sono confermati dal negozio o dal servizio online.",
+    "estimate": "Stima.",
+    "toVerify": "Da verificare",
+    "back": "Indietro"
+  },
+  "home": {
+    "title": "La tua settimana",
+    "week": "Settimana {week}",
+    "planEmptyTitle": "Ancora nessun piano per questa settimana",
+    "planEmptyBody": "Metti la spesa nella lista e scopri dove paghi meno.",
+    "planEmptyAction": "Crea la lista",
+    "searchLabel": "Cerca prodotto, marca o EAN",
+    "searchPlaceholder": "detersivo economico",
+    "searchSubmit": "Cerca",
+    "watchTitle": "Da tenere d'occhio questa settimana",
+    "allOffers": "Tutte le offerte"
+  },
+  "offers": {
+    "title": "Offerte",
+    "emptyTitle": "Ancora nessuna offerta",
+    "emptyBody": "Le offerte compaiono qui appena vengono raccolte."
+  },
+  "list": {
+    "title": "Lista",
+    "emptyTitle": "La lista è vuota",
+    "emptyBody": "Aggiungi prodotti dalla ricerca o dalle offerte."
+  },
+  "search": {
+    "title": "Cerca",
+    "emptyTitle": "Cerca un prodotto",
+    "emptyBody": "Scrivi un prodotto, una marca o un EAN per confrontare i prezzi."
+  },
+  "more": {
+    "title": "Altro",
+    "language": "Lingua",
+    "theme": "Aspetto",
+    "themeSystem": "Sistema",
+    "themeDark": "Scuro",
+    "themeLight": "Chiaro",
+    "installTitle": "Aggiungi alla schermata Home",
+    "installAndroid": "Android: apri il menu del browser e scegli 'Installa app'.",
+    "installIos": "iPhone o iPad: tocca Condividi e scegli 'Aggiungi alla schermata Home'.",
+    "aboutTitle": "Informazioni",
+    "aboutBody": "SpesaSmart NL è un progetto personale e non è affiliato ai supermercati citati. I prezzi arrivano da pagine pubbliche delle offerte e da dati aperti; ogni offerta mostra la fonte e il momento della raccolta.",
+    "privacyTitle": "Privacy",
+    "privacyBody": "Nessun account, nessuna pubblicità, nessun tracciamento. La lista appartiene a questo dispositivo."
+  },
+  "offline": {
+    "title": "Nessuna connessione",
+    "body": "I prezzi non vengono conservati offline, così non vedi mai un prezzo superato. Riprova quando torni online."
+  }
+}

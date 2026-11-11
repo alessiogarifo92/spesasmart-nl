@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { addDays, amsterdamToday, daysBetween, dbDateToIso, isIsoDate, isoToDbDate } from "./dates";
+import { addDays, amsterdamToday, daysBetween, dbDateToIso, isIsoDate, isoToDbDate, isoWeek } from "./dates";
 
 describe("isIsoDate", () => {
   it("accepts real calendar dates", () => {
@@ -63,5 +63,21 @@ describe("database conversion", () => {
 
   it("refuses an invalid date", () => {
     expect(() => isoToDbDate("2026-11-31")).toThrow(RangeError);
+  });
+});
+
+describe("isoWeek", () => {
+  it("numbers ordinary weeks from Monday", () => {
+    expect(isoWeek("2026-11-11")).toBe(46);
+    expect(isoWeek("2026-11-09")).toBe(46);
+    expect(isoWeek("2026-11-15")).toBe(46);
+    expect(isoWeek("2026-11-16")).toBe(47);
+  });
+
+  it("handles the turn of the year", () => {
+    expect(isoWeek("2026-12-31")).toBe(53);
+    expect(isoWeek("2027-01-03")).toBe(53);
+    expect(isoWeek("2027-01-04")).toBe(1);
+    expect(isoWeek("2024-12-30")).toBe(1);
   });
 });

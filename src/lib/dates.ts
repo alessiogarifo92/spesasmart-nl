@@ -55,3 +55,12 @@ export function isoToDbDate(date: IsoDate): Date {
 export function dbDateToIso(date: Date): IsoDate {
   return date.toISOString().slice(0, 10);
 }
+
+/** ISO 8601 week number (weeks start on Monday; week 1 holds the first Thursday). */
+export function isoWeek(date: IsoDate): number {
+  const day = isoToDbDate(date);
+  // Move to the Thursday of this week: its year is the ISO week-numbering year.
+  const thursday = new Date(day.getTime() + (3 - ((day.getUTCDay() + 6) % 7)) * 86_400_000);
+  const yearStart = Date.UTC(thursday.getUTCFullYear(), 0, 1);
+  return Math.floor((thursday.getTime() - yearStart) / (7 * 86_400_000)) + 1;
+}

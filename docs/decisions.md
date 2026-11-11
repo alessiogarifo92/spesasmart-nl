@@ -13,7 +13,7 @@ Confirmed decisions for SpesaSmart NL, newest phase last. Tickets reference this
 
 ## 2. Stack and cost (confirmed 2026-11-11, chosen by the implementer at the user's request)
 
-- **App**: Next.js (App Router), TypeScript, Tailwind CSS, shadcn/ui components, `next-intl`.
+- **App**: Next.js (App Router), TypeScript, Tailwind CSS, `next-intl`. (shadcn/ui was planned and dropped: see §3.5.)
 - **Data**: PostgreSQL with Prisma; search with PostgreSQL full-text plus `pg_trgm`. No separate search engine.
 - **Ingestion**: a Node worker process separate from the web app, BullMQ queues on Redis, Playwright only for chains whose offer pages need JavaScript rendering.
 - **Auth**: Auth.js with email and Google. Apple sign-in is not planned (needs a paid Apple Developer account).
@@ -52,7 +52,9 @@ Not legal advice. A commercial launch would need a lawyer and an official feed o
 
 ## 3.5. Design (confirmed 2026-11-11)
 
-Direction **C · Route**: the home opens on the week's plan (stops, total, saving), offers support it; dark mode native with a light variant. Canvas with the three compared directions: https://claude.ai/artifact/RpEAiK8ZqVLs2oYWbe5xUu (private to the owner). Tokens and rules live in `DESIGN.md` at the repository root (written by the design-system ticket); UI tickets reference it.
+Direction **C · Route**: the home opens on the week's plan (stops, total, saving), offers support it; dark mode native with a light variant. Canvas with the three compared directions: https://claude.ai/artifact/RpEAiK8ZqVLs2oYWbe5xUu (private to the owner). Tokens and rules live in `DESIGN.md` at the repository root; UI tickets reference it.
+
+Changes made while building it: the fourth navigation tab is "Meer" (language, appearance, install help, about) because the savings dashboard is parked; components are written for the app instead of using shadcn/ui, since the set is small; fonts are self-hosted.
 
 ## 4. Delivery (confirmed 2026-11-11)
 

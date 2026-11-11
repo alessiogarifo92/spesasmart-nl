@@ -1,1 +1,69 @@
-{"app":{"name":"SpesaSmart NL","tagline":"Alle supermarktaanbiedingen op één plek."}}
+{
+  "app": {
+    "name": "SpesaSmart NL",
+    "tagline": "Alle supermarktaanbiedingen op één plek.",
+    "description": "Vergelijk supermarktaanbiedingen in Nederland en vind de goedkoopste route voor je boodschappenlijst."
+  },
+  "nav": {
+    "label": "Hoofdnavigatie",
+    "plan": "Plan",
+    "offers": "Aanbiedingen",
+    "list": "Lijst",
+    "more": "Meer",
+    "skip": "Naar de inhoud"
+  },
+  "common": {
+    "demoData": "Demodata",
+    "demoDataHint": "Verzonnen voorbeelddata, geen echte prijzen.",
+    "disclaimer": "De eindprijs en beschikbaarheid worden bevestigd door de winkel of de online dienst.",
+    "estimate": "Schatting.",
+    "toVerify": "Te controleren",
+    "back": "Terug"
+  },
+  "home": {
+    "title": "Jouw week",
+    "week": "Week {week}",
+    "planEmptyTitle": "Nog geen plan voor deze week",
+    "planEmptyBody": "Zet je boodschappen op de lijst en zie waar je het minst betaalt.",
+    "planEmptyAction": "Maak je lijst",
+    "searchLabel": "Zoek product, merk of EAN",
+    "searchPlaceholder": "wasmiddel goedkoop",
+    "searchSubmit": "Zoeken",
+    "watchTitle": "Let op deze week",
+    "allOffers": "Alle aanbiedingen"
+  },
+  "offers": {
+    "title": "Aanbiedingen",
+    "emptyTitle": "Nog geen aanbiedingen",
+    "emptyBody": "Zodra er aanbiedingen zijn verzameld, staan ze hier."
+  },
+  "list": {
+    "title": "Lijst",
+    "emptyTitle": "Je lijst is leeg",
+    "emptyBody": "Voeg producten toe vanuit zoeken of aanbiedingen."
+  },
+  "search": {
+    "title": "Zoeken",
+    "emptyTitle": "Zoek een product",
+    "emptyBody": "Typ een product, merk of EAN om prijzen te vergelijken."
+  },
+  "more": {
+    "title": "Meer",
+    "language": "Taal",
+    "theme": "Weergave",
+    "themeSystem": "Systeem",
+    "themeDark": "Donker",
+    "themeLight": "Licht",
+    "installTitle": "Zet op je beginscherm",
+    "installAndroid": "Android: open het browsermenu en kies 'App installeren'.",
+    "installIos": "iPhone of iPad: tik op Deel en kies 'Zet op beginscherm'.",
+    "aboutTitle": "Over deze app",
+    "aboutBody": "SpesaSmart NL is een persoonlijk project en heeft geen band met de genoemde supermarkten. Prijzen komen van openbare aanbiedingspagina's en open data, met bij elke aanbieding de bron en het moment van verzamelen.",
+    "privacyTitle": "Privacy",
+    "privacyBody": "Geen account, geen advertenties, geen tracking. Je lijst hoort bij dit apparaat."
+  },
+  "offline": {
+    "title": "Geen verbinding",
+    "body": "Prijzen worden niet offline bewaard, zodat je nooit een verouderde prijs ziet. Probeer het opnieuw zodra je weer online bent."
+  }
+}
