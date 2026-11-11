@@ -1,4 +1,5 @@
-// Data model: see docs/architecture.md. Models are added by the data-model ticket.
+// Conventions (docs/architecture.md): money in integer euro cents, quantities in
+// base units (g, ml, piece), validity as inclusive Europe/Amsterdam calendar dates.
 
 generator client {
   provider = "prisma-client"
@@ -7,4 +8,353 @@ generator client {
 
 datasource db {
   provider = "postgresql"
+}
+
+enum RetailerType {
+  SUPERMARKET
+  ONLINE
+}
+
+/// Base unit a package size is expressed in.
+enum UnitKind {
+  G
+  ML
+  PIECE
+}
+
+/// Promotion mechanics; parameters live in `Offer.promoParams`.
+enum PromoType {
+  PRICE_CUT
+  X_PLUS_Y_FREE
+  NTH_HALF_PRICE
+  X_FOR_PRICE
+  PERCENT_OFF
+  UNKNOWN
+}
+
+enum OfferStatus {
+  /// Validity known and the offer passed validation.
+  VERIFIED
+  /// Validity unknown or validation raised doubts: shown as "to be verified".
+  UNVERIFIED
+  /// Failed validation: kept for the record, never shown.
+  REJECTED
+}
+
+/// WEEKLY is the regular promotion cycle; DAILY is a one-day deal (e.g. Vomar Dagknaller).
+enum OfferKind {
+  WEEKLY
+  DAILY
+}
+
+enum MatchType {
+  SAME
+  SIMILAR
+  ALTERNATIVE
+}
+
+enum MatchStatus {
+  AUTO
+  NEEDS_REVIEW
+  CONFIRMED
+  REJECTED
+}
+
+enum IngestionStatus {
+  RUNNING
+  SUCCESS
+  PARTIAL
+  FAILED
+  SKIPPED
+}
+
+enum FeedbackKind {
+  WRONG_MATCH
+  WRONG_PRICE
+  OTHER
+}
+
+model Retailer {
+  id      String       @id @default(cuid())
+  slug    String       @unique
+  name    String
+  type    RetailerType @default(SUPERMARKET)
+  country String       @default("NL")
+  website String?
+  /// Shown in the app at all.
+  active  Boolean      @default(true)
+  /// Kill switch for this retailer's real adapter; read at the start of every run.
+  adapterEnabled Boolean @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  stores        Store[]
+  products      Product[]
+  offers        Offer[]
+  priceHistory  PriceHistory[]
+  ingestionRuns IngestionRun[]
+  pinnedItems   ShoppingListItem[]
+
+  @@map("retailers")
+}
+
+model Store {
+  id                String   @id @default(cuid())
+  retailerId        String
+  retailer          Retailer @relation(fields: [retailerId], references: [id], onDelete: Cascade)
+  name              String
+  address           String?
+  city              String?
+  postalCode        String?
+  latitude          Float?
+  longitude         Float?
+  openingHours      Json?
+  deliveryAvailable Boolean  @default(false)
+  /// Where the record came from (for example an OpenStreetMap node id).
+  sourceRef         String?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  offers       Offer[]
+  priceHistory PriceHistory[]
+
+  @@unique([retailerId, sourceRef])
+  @@index([retailerId])
+  @@map("stores")
+}
+
+model Category {
+  id       String     @id @default(cuid())
+  slug     String     @unique
+  nameNl   String
+  nameEn   String
+  nameIt   String
+  parentId String?
+  parent   Category?  @relation("CategoryTree", fields: [parentId], references: [id], onDelete: SetNull)
+  children Category[] @relation("CategoryTree")
+  position Int        @default(0)
+
+  products Product[]
+
+  @@map("categories")
+}
+
+/// A product as one source lists it. The same real-world product sold by two
+/// retailers is two rows, linked through `ProductMatch`.
+model Product {
+  id             String    @id @default(cuid())
+  retailerId     String?
+  retailer       Retailer? @relation(fields: [retailerId], references: [id], onDelete: Cascade)
+  /// Identifier at the source; with `retailerId` it makes re-ingestion idempotent.
+  externalId     String?
+  name           String
+  /// Output of `normalizeName` (src/domain/search): lower-cased, accent-free, punctuation-free.
+  normalizedName String
+  brand          String?
+  categoryId     String?
+  category       Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  ean            String?
+  /// Link to an image at the source or an openly licensed one; never a stored copy.
+  imageUrl       String?
+  unit           UnitKind?
+  /// Size of one package in base units (g, ml or pieces).
+  packageAmount  Int?
+  /// Packages per sales unit, e.g. 6 for "6 x 330 ml".
+  packageCount   Int       @default(1)
+  isOrganic      Boolean   @default(false)
+  /// Dietary and other flags: { vegan, vegetarian, glutenFree, lactoseFree, halal, kosher }.
+  attributes     Json      @default("{}")
+  isDemo         Boolean   @default(false)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  offers            Offer[]
+  priceHistory      PriceHistory[]
+  canonicalMatches  ProductMatch[]     @relation("CanonicalProduct")
+  candidateMatches  ProductMatch[]     @relation("CandidateProduct")
+  shoppingListItems ShoppingListItem[]
+  favorites         Favorite[]
+  feedback          Feedback[]
+
+  @@unique([retailerId, externalId])
+  @@index([ean])
+  @@index([categoryId])
+  @@index([brand])
+  @@index([normalizedName(ops: raw("gin_trgm_ops"))], type: Gin, map: "products_normalized_name_trgm_idx")
+  @@map("products")
+}
+
+model Offer {
+  id                String      @id @default(cuid())
+  productId         String
+  product           Product     @relation(fields: [productId], references: [id], onDelete: Cascade)
+  retailerId        String
+  retailer          Retailer    @relation(fields: [retailerId], references: [id], onDelete: Cascade)
+  storeId           String?
+  store             Store?      @relation(fields: [storeId], references: [id], onDelete: SetNull)
+  /// Offer headline as the source words it (may cover a range of products).
+  title             String
+  /// Price of one item under the offer, when the source states one.
+  currentPriceCents Int?
+  /// Regular ("van") price of one item, when the source states one.
+  regularPriceCents Int?
+  kind              OfferKind   @default(WEEKLY)
+  promoType         PromoType   @default(PRICE_CUT)
+  /// Parameters of the mechanic, shaped like `Promotion` in src/domain/pricing:
+  /// { buy, free } | { n } | { quantity, totalCents } | { percent }.
+  promoParams       Json        @default("{}")
+  /// Mechanic as the source words it, e.g. "1+1 gratis".
+  promoDescription  String?
+  /// Cents per kg, litre or piece for one item at `currentPriceCents`.
+  pricePerUnitCents Int?
+  validFrom         DateTime?   @db.Date
+  validUntil        DateTime?   @db.Date
+  /// True when validity was derived from a week number rather than stated dates.
+  validityApproximate Boolean   @default(false)
+  conditions        String?
+  availableOnline   Boolean     @default(false)
+  availableInStore  Boolean     @default(true)
+  status            OfferStatus @default(UNVERIFIED)
+  /// Parsing confidence between 0 and 1.
+  confidence        Float       @default(0)
+  sourceUrl         String
+  collectedAt       DateTime
+  /// SHA-256 of the normalised offer content: the deduplication key within a retailer.
+  contentHash       String
+  /// Minimised raw record from the source, for auditing the parse.
+  rawPayload        Json        @default("{}")
+  isDemo            Boolean     @default(false)
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+
+  favorites Favorite[]
+
+  @@unique([retailerId, contentHash])
+  @@index([productId])
+  @@index([retailerId, validUntil])
+  @@index([validFrom, validUntil])
+  @@index([status])
+  @@map("offers")
+}
+
+model PriceHistory {
+  id                String   @id @default(cuid())
+  productId         String
+  product           Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  retailerId        String
+  retailer          Retailer @relation(fields: [retailerId], references: [id], onDelete: Cascade)
+  storeId           String?
+  store             Store?   @relation(fields: [storeId], references: [id], onDelete: SetNull)
+  priceCents        Int
+  regularPriceCents Int?
+  /// Where the price was read (open-data file or page URL).
+  sourceUrl         String?
+  isDemo            Boolean  @default(false)
+  recordedAt        DateTime @default(now())
+
+  @@index([productId, recordedAt])
+  @@map("price_history")
+}
+
+model ProductMatch {
+  id                 String      @id @default(cuid())
+  canonicalProductId String
+  canonicalProduct   Product     @relation("CanonicalProduct", fields: [canonicalProductId], references: [id], onDelete: Cascade)
+  candidateProductId String
+  candidateProduct   Product     @relation("CandidateProduct", fields: [candidateProductId], references: [id], onDelete: Cascade)
+  matchType          MatchType
+  /// Matching confidence between 0 and 1.
+  confidence         Float
+  status             MatchStatus @default(AUTO)
+  createdAt          DateTime    @default(now())
+  updatedAt          DateTime    @updatedAt
+
+  feedback Feedback[]
+
+  @@unique([canonicalProductId, candidateProductId])
+  @@index([candidateProductId])
+  @@index([status])
+  @@map("product_matches")
+}
+
+model IngestionRun {
+  id           String          @id @default(cuid())
+  retailerId   String?
+  retailer     Retailer?       @relation(fields: [retailerId], references: [id], onDelete: SetNull)
+  /// Adapter identifier, e.g. "jumbo" or "mock:jumbo".
+  adapter      String
+  startedAt    DateTime        @default(now())
+  finishedAt   DateTime?
+  status       IngestionStatus @default(RUNNING)
+  itemsFound   Int             @default(0)
+  itemsUpdated Int             @default(0)
+  /// Array of { message, url?, item? }: partial failures do not abort a run.
+  errors       Json            @default("[]")
+
+  @@index([adapter, startedAt])
+  @@map("ingestion_runs")
+}
+
+/// Lists belong to a device (random id in a cookie): the MVP has no accounts.
+model ShoppingList {
+  id        String   @id @default(cuid())
+  deviceId  String
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  items ShoppingListItem[]
+
+  @@index([deviceId])
+  @@map("shopping_lists")
+}
+
+model ShoppingListItem {
+  id               String       @id @default(cuid())
+  listId           String
+  list             ShoppingList @relation(fields: [listId], references: [id], onDelete: Cascade)
+  /// What the shopper typed; kept even when a product is linked.
+  label            String
+  productId        String?
+  product          Product?     @relation(fields: [productId], references: [id], onDelete: SetNull)
+  quantity         Int          @default(1)
+  /// "Always buy this at retailer X".
+  pinnedRetailerId String?
+  pinnedRetailer   Retailer?    @relation(fields: [pinnedRetailerId], references: [id], onDelete: SetNull)
+  checked          Boolean      @default(false)
+  position         Int          @default(0)
+  createdAt        DateTime     @default(now())
+
+  @@index([listId, position])
+  @@map("shopping_list_items")
+}
+
+model Favorite {
+  id        String   @id @default(cuid())
+  deviceId  String
+  productId String?
+  product   Product? @relation(fields: [productId], references: [id], onDelete: Cascade)
+  offerId   String?
+  offer     Offer?   @relation(fields: [offerId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([deviceId, productId])
+  @@unique([deviceId, offerId])
+  @@map("favorites")
+}
+
+model Feedback {
+  id             String        @id @default(cuid())
+  deviceId       String?
+  kind           FeedbackKind
+  productId      String?
+  product        Product?      @relation(fields: [productId], references: [id], onDelete: SetNull)
+  productMatchId String?
+  productMatch   ProductMatch? @relation(fields: [productMatchId], references: [id], onDelete: SetNull)
+  message        String?
+  resolvedAt     DateTime?
+  createdAt      DateTime      @default(now())
+
+  @@index([kind, createdAt])
+  @@map("feedback")
 }
