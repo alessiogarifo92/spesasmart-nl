@@ -1,0 +1,49 @@
+name: CI
+
+on:
+  push:
+    branches: [main, mvp]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: spesasmart
+          POSTGRES_PASSWORD: spesasmart
+          POSTGRES_DB: spesasmart_test
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U spesasmart"
+          --health-interval 5s --health-timeout 3s --health-retries 10
+      redis:
+        image: redis:7
+        ports: ["6379:6379"]
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s --health-timeout 3s --health-retries 10
+    env:
+      DATABASE_URL: postgresql://spesasmart:spesasmart@localhost:5432/spesasmart_test
+      TEST_DATABASE_URL: postgresql://spesasmart:spesasmart@localhost:5432/spesasmart_test
+      REDIS_URL: redis://localhost:6379
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run db:test:deploy
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm run test:coverage
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:e2e

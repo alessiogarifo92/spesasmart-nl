@@ -1,0 +1,10 @@
+// Data model: see docs/architecture.md. Models are added by the data-model ticket.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}

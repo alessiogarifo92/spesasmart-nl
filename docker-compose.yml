@@ -1,0 +1,31 @@
+# Local infrastructure only. The app and the worker run on the host with npm.
+services:
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: spesasmart
+      POSTGRES_PASSWORD: spesasmart
+      POSTGRES_DB: spesasmart
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./docker/postgres-init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U spesasmart"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  redis:
+    image: redis:7
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  postgres-data:

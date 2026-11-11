@@ -12,8 +12,8 @@ This project relies on the repo `alessiogarifo92/claude-skills` (skills, agents,
    Claude Code detects agent files added to an existing `~/.claude/agents/` without a restart, but not when that directory did not exist at session start (typical in a fresh container). Then either restart the session once, or use the fallback above for this session. `templates/session-start-hook.sh` can install everything before the session starts (best effort).
 4. If the attach fails, say so in visible text and ask the user how to proceed. Never continue silently without the rules.
 
-Run / preview (manual gate): not set yet. Ticket 0 (scaffold + CI) defines the dev command and URLs and writes them here; until then the gate is parked with local commands.
+Run / preview (manual gate): `docker compose up -d && npm install && npm run db:deploy && npm run db:seed && npm run dev`, then http://localhost:3000 (Dutch), `/en`, `/it`. No online preview: the manual gate uses committed screenshots under `docs/test-evidence/` plus these local commands. The user asked for one manual check at the end of the MVP: ticket branches merge into the integration branch `mvp`; nothing merges into `main` before that check.
 
 Repo visibility: public (check: `gh api repos/<owner>/<repo> --jq .private`). Private means finite GitHub Actions minutes: `npm run verify` / `make verify` locally is the push gate, and a CI job that never starts follows `test-verification`'s billing fallback.
 
-Needed environment variables / connectors for this project: none yet. Ticket 0 adds `.env.example`; every variable is documented there and in the README. No `.mcp.json` is committed.
+Needed environment variables / connectors for this project: see `.env.example` (`DATABASE_URL`, `TEST_DATABASE_URL`, `REDIS_URL`, `INGESTION_USER_AGENT`, `INGESTION_ENABLED_ADAPTERS`, `ADMIN_TOKEN`). No `.mcp.json` is committed. Architecture, module boundaries and conventions: `docs/architecture.md`.

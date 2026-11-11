@@ -50,6 +50,13 @@ Observed on real pages:
 
 Not legal advice. A commercial launch would need a lawyer and an official feed or agreement from at least one chain first.
 
-## 3.5. Design (open)
+## 3.5. Design (confirmed 2026-11-11)
 
-Three directions on one canvas, each drawn on Home and "Optimise basket": **A · Kassabon**, **B · Markt**, **C · Route**. Canvas: https://claude.ai/artifact/RpEAiK8ZqVLs2oYWbe5xUu (private to the owner). Recommendation: C. No UI ticket starts until one is chosen and written to `DESIGN.md`.
+Direction **C · Route**: the home opens on the week's plan (stops, total, saving), offers support it; dark mode native with a light variant. Canvas with the three compared directions: https://claude.ai/artifact/RpEAiK8ZqVLs2oYWbe5xUu (private to the owner). Tokens and rules live in `DESIGN.md` at the repository root (written by the design-system ticket); UI tickets reference it.
+
+## 4. Delivery (confirmed 2026-11-11)
+
+- **No accounts in the MVP**: lists are tied to the device. Auth.js is added only if several users or devices are wanted.
+- **No online preview**: each ticket leaves committed screenshots and local commands.
+- **One manual check at the end of the MVP**, at the user's request: ticket branches merge into the integration branch `mvp`; `main` receives nothing until the user has checked `mvp`.
+- **Retailer hosts are not reachable from the cloud development container** (network policy). Adapter parsers are developed against reduced fixtures captured once; live runs are verified on the user's machine.
