@@ -3,8 +3,11 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { LocaleSwitcher } from "@/components/settings/locale-switcher";
 import { ThemeSwitcher } from "@/components/settings/theme-switcher";
 import { PageHeader } from "@/components/shell/page-header";
+import { buttonClass } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Disclaimer } from "@/components/ui/disclaimer";
+import { readDeviceId } from "@/server/device";
+import { forgetDeviceAction } from "@/server/list-actions";
 
 type Props = { params: Promise<{ locale: string }> };
 
@@ -27,6 +30,7 @@ export default async function MorePage({ params }: Props) {
   const { locale } = await params;
   setRequestLocale(locale);
   const t = await getTranslations("more");
+  const hasData = (await readDeviceId()) !== null;
 
   return (
     <>
@@ -51,6 +55,19 @@ export default async function MorePage({ params }: Props) {
       </Section>
       <Section title={t("privacyTitle")}>
         <p className="text-muted">{t("privacyBody")}</p>
+        {hasData && (
+          <details>
+            <summary className="flex min-h-11 cursor-pointer list-none items-center text-[13px] leading-5 font-semibold text-warn underline [&::-webkit-details-marker]:hidden">
+              {t("forgetTitle")}
+            </summary>
+            <form action={forgetDeviceAction} className="flex flex-col gap-2 pt-1">
+              <p className="text-muted">{t("forgetBody")}</p>
+              <button type="submit" className={buttonClass("warn", "w-full")}>
+                {t("forgetConfirm")}
+              </button>
+            </form>
+          </details>
+        )}
       </Section>
     </>
   );

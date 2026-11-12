@@ -11,6 +11,8 @@ import { SearchField } from "@/components/ui/search-field";
 import { isEmptyQuery, parseQuery, type ParsedQuery } from "@/domain/search";
 import { amsterdamToday } from "@/lib/dates";
 import { db } from "@/lib/db";
+import { readDeviceId } from "@/server/device";
+import { listedQuantities } from "@/server/lists";
 import { searchContext, searchProducts, type SearchHit } from "@/server/search";
 
 type Props = {
@@ -51,12 +53,14 @@ function Understood({ query, category }: { query: ParsedQuery; category: string 
   );
 }
 
-function Section({ title, hits }: { title: string; hits: SearchHit[] }) {
+type Listed = ReadonlyMap<string, number>;
+
+function Section({ title, hits, listed }: { title: string; hits: SearchHit[]; listed: Listed }) {
   if (hits.length === 0) return null;
   return (
     <section className="flex flex-col gap-2">
       <h2 className="font-display text-[16px] leading-6 font-semibold">{title}</h2>
-      <ProductList items={hits} label={title} />
+      <ProductList items={hits} label={title} listed={listed} />
     </section>
   );
 }
@@ -83,7 +87,10 @@ export default async function SearchPage({ params, searchParams }: Props) {
     );
   }
 
-  const { hits, total, sizeFound } = await searchProducts(db, { query, today: amsterdamToday(new Date()) });
+  const [{ hits, total, sizeFound }, listed] = await Promise.all([
+    searchProducts(db, { query, today: amsterdamToday(new Date()) }),
+    listedQuantities(db, await readDeviceId()),
+  ]);
   const names = context.categories?.find((category) => category.slug === query.categorySlug)?.names;
   const category = names ? names[{ nl: 0, en: 1, it: 2 }[locale] ?? 0] : null;
 
@@ -103,13 +110,13 @@ export default async function SearchPage({ params, searchParams }: Props) {
         <>
           {sizeFound ? (
             <>
-              <Section title={t("sizeTitle")} hits={hits.filter((hit) => hit.sizeMatch)} />
-              <Section title={t("otherSizesTitle")} hits={hits.filter((hit) => !hit.sizeMatch)} />
+              <Section title={t("sizeTitle")} hits={hits.filter((hit) => hit.sizeMatch)} listed={listed} />
+              <Section title={t("otherSizesTitle")} hits={hits.filter((hit) => !hit.sizeMatch)} listed={listed} />
             </>
           ) : (
             <>
               {query.quantity && <p className="text-label text-warn">{t("sizeNotFound")}</p>}
-              <ProductList items={hits} label={t("resultsLabel")} />
+              <ProductList items={hits} label={t("resultsLabel")} listed={listed} />
             </>
           )}
           {total > hits.length && <p className="text-label text-muted">{t("shownOf", { shown: hits.length, total })}</p>}

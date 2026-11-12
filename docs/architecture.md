@@ -36,9 +36,9 @@ flowchart LR
 | `src/ingestion` | Adapter contract, HTTP client, robots check, validation, runner, adapters. | `src/domain`, `src/lib` |
 | `src/worker` | BullMQ entry point and schedules. | `src/ingestion`, `src/lib` |
 | `src/lib` | Database client and other shared infrastructure. | `src/generated` |
-| `src/server` | Database queries used by pages and route handlers. | `src/domain`, `src/lib` |
+| `src/server` | Database queries used by pages and route handlers; the Server Functions behind forms (`list-actions.ts`), each validating its own input; the device cookie. | `src/domain`, `src/lib` |
 | `src/app` | Pages, layouts, route handlers. | everything above except `src/worker` |
-| `src/components` | React components: `shell` (layout, navigation), `ui` (primitives from `DESIGN.md`), `offers`, `products`, `settings`. | `src/domain` types, `src/i18n`, `src/lib` |
+| `src/components` | React components: `shell` (layout, navigation), `ui` (primitives from `DESIGN.md`), `offers`, `products`, `list`, `settings`. | `src/domain` types, `src/i18n`, `src/lib` |
 | `src/i18n`, `messages/` | Routing, request config, translations. | — |
 | `prisma/` | Schema, migrations, seed. | — |
 | `tests/integration` | Tests that need the database. | — |

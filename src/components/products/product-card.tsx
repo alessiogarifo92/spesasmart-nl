@@ -1,17 +1,24 @@
 import { useFormatter, useTranslations } from "next-intl";
+import { AddToList } from "@/components/list/add-to-list";
 import { useMoney, usePromoLabel } from "@/components/offers/offer-card";
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/cn";
 import type { CatalogProduct } from "@/server/catalog";
 
-type Props = { product: CatalogProduct; lowestPrice?: boolean; bestUnitPrice?: boolean };
+type Props = {
+  product: CatalogProduct;
+  lowestPrice?: boolean;
+  bestUnitPrice?: boolean;
+  /** How many of this product are on the shopping list already. */
+  listed?: number;
+};
 
 /**
  * One chain's listing of a product with today's price. The price is a fact
  * (shelf price, or a verified running offer); an offer that needs several items
  * or cannot be verified is described next to it and never changes it.
  */
-export function ProductCard({ product, lowestPrice = false, bestUnitPrice = false }: Props) {
+export function ProductCard({ product, lowestPrice = false, bestUnitPrice = false, listed = 0 }: Props) {
   const t = useTranslations("product");
   const offers = useTranslations("offers");
   const common = useTranslations("common");
@@ -107,16 +114,25 @@ export function ProductCard({ product, lowestPrice = false, bestUnitPrice = fals
           {offers("updated", { date: format.dateTime(source.at, { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }) })}
         </p>
       )}
+
+      <AddToList productId={product.id} name={product.name} quantity={listed} />
     </Card>
   );
 }
 
-export function ProductList({ items, label }: { items: Props[]; label?: string }) {
+type ListProps = {
+  items: Omit<Props, "listed">[];
+  label?: string;
+  /** Quantity on the shopping list per product id. */
+  listed?: ReadonlyMap<string, number>;
+};
+
+export function ProductList({ items, label, listed }: ListProps) {
   return (
     <ul aria-label={label} className="m-0 flex list-none flex-col gap-2 p-0">
       {items.map((item) => (
         <li key={item.product.id}>
-          <ProductCard {...item} />
+          <ProductCard {...item} listed={listed?.get(item.product.id)} />
         </li>
       ))}
     </ul>

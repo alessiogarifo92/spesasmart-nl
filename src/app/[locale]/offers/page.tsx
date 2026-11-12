@@ -10,6 +10,8 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { hasFilters, parseOfferFilters } from "@/domain/offers";
 import { amsterdamToday } from "@/lib/dates";
 import { db } from "@/lib/db";
+import { readDeviceId } from "@/server/device";
+import { listedQuantities } from "@/server/lists";
 import { listOffers, offerFacets, type OfferView } from "@/server/offers";
 
 type Props = {
@@ -23,12 +25,14 @@ export async function generateMetadata({ params }: Pick<Props, "params">): Promi
   return { title: t("title") };
 }
 
-function Section({ title, offers }: { title: string; offers: OfferView[] }) {
+type Listed = ReadonlyMap<string, number>;
+
+function Section({ title, offers, listed }: { title: string; offers: OfferView[]; listed: Listed }) {
   if (offers.length === 0) return null;
   return (
     <section className="flex flex-col gap-2">
       <h2 className="font-display text-[16px] leading-6 font-semibold">{title}</h2>
-      <OfferList offers={offers} label={title} />
+      <OfferList offers={offers} label={title} listed={listed} />
     </section>
   );
 }
@@ -39,9 +43,10 @@ export default async function OffersPage({ params, searchParams }: Props) {
   const t = await getTranslations("offers");
   const filters = parseOfferFilters(await searchParams);
   const today = amsterdamToday(new Date());
-  const [{ offers, total }, facets] = await Promise.all([
+  const [{ offers, total }, facets, listed] = await Promise.all([
     listOffers(db, { today, filters }),
     offerFacets(db, today),
+    listedQuantities(db, await readDeviceId()),
   ]);
   const inState = (...states: OfferView["summary"]["state"][]) =>
     offers.filter((offer) => states.includes(offer.summary.state));
@@ -67,9 +72,9 @@ export default async function OffersPage({ params, searchParams }: Props) {
         )
       ) : (
         <>
-          <Section title={t("runningTitle")} offers={inState("ends-today", "running")} />
-          <Section title={t("unknownTitle")} offers={inState("unknown-validity")} />
-          <Section title={t("upcomingTitle")} offers={inState("upcoming")} />
+          <Section title={t("runningTitle")} offers={inState("ends-today", "running")} listed={listed} />
+          <Section title={t("unknownTitle")} offers={inState("unknown-validity")} listed={listed} />
+          <Section title={t("upcomingTitle")} offers={inState("upcoming")} listed={listed} />
           {total > offers.length && <p className="text-label text-muted">{t("shownOf", { shown: offers.length, total })}</p>}
           <Disclaimer />
         </>

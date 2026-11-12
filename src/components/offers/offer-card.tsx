@@ -1,4 +1,5 @@
 import { useFormatter, useTranslations } from "next-intl";
+import { AddToList } from "@/components/list/add-to-list";
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/cn";
 import { isoToDbDate } from "@/lib/dates";
@@ -36,7 +37,7 @@ export function usePromoLabel() {
  * One offer. Facts (price, mechanic, validity, source) and estimates (discount,
  * price per item in a deal) are kept apart: every estimate says "ca.".
  */
-export function OfferCard({ offer }: { offer: OfferView }) {
+export function OfferCard({ offer, listed = 0 }: { offer: OfferView; listed?: number }) {
   const t = useTranslations("offers");
   const common = useTranslations("common");
   const format = useFormatter();
@@ -136,16 +137,25 @@ export function OfferCard({ offer }: { offer: OfferView }) {
           date: format.dateTime(offer.collectedAt, { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }),
         })}
       </p>
+
+      <AddToList productId={offer.productId} name={offer.name} quantity={listed} />
     </Card>
   );
 }
 
-export function OfferList({ offers, label }: { offers: OfferView[]; label?: string }) {
+type OfferListProps = {
+  offers: OfferView[];
+  label?: string;
+  /** Quantity on the shopping list per product id. */
+  listed?: ReadonlyMap<string, number>;
+};
+
+export function OfferList({ offers, label, listed }: OfferListProps) {
   return (
     <ul aria-label={label} className="m-0 flex list-none flex-col gap-2 p-0">
       {offers.map((offer) => (
         <li key={offer.id}>
-          <OfferCard offer={offer} />
+          <OfferCard offer={offer} listed={listed?.get(offer.productId)} />
         </li>
       ))}
     </ul>
