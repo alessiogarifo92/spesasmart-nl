@@ -173,7 +173,8 @@
     "privacyBody": "Nessun account, nessuna pubblicità, nessun tracciamento. La lista appartiene a questo dispositivo: per questo l'app conserva un numero casuale in un cookie, e un secondo cookie ricorda la lingua. Non viene salvato altro.",
     "forgetTitle": "Cancella i miei dati",
     "forgetBody": "Elimina tutte le tue liste dal server e il cookie di questo dispositivo. Non si può annullare.",
-    "forgetConfirm": "Sì, cancella tutto"
+    "forgetConfirm": "Sì, cancella tutto",
+    "sourcesLink": "Fonti dati e correttezza"
   },
   "offline": {
     "title": "Nessuna connessione",
@@ -351,5 +352,34 @@
     "pagePrevious": "Precedente",
     "pageNext": "Successiva",
     "pageOf": "Pagina {page} di {pages}"
+  },
+  "sources": {
+    "title": "Fonti dati e correttezza",
+    "back": "Altro",
+    "chainsTitle": "Da dove arrivano le offerte",
+    "chainsBody": "Per ogni catena, cosa mostra l'app in questo momento.",
+    "kind": {
+      "real": "Pagina pubblica delle offerte della catena",
+      "demo": "Dati demo: esempi inventati, non prezzi reali",
+      "mixed": "Pagina pubblica delle offerte della catena, più dati demo",
+      "none": "Nessuna offerta al momento"
+    },
+    "collected": "ultima raccolta {date}",
+    "openData": "Le offerte reali vengono lette al massimo una volta al giorno dalla pagina pubblica delle offerte della catena, mai da app o sistemi protetti. I dati demo sono etichettati ovunque.",
+    "rulesTitle": "Come l'app tratta i prezzi",
+    "rule1": "Ogni offerta ha la propria validità: le settimane promozionali cambiano da catena a catena.",
+    "rule2": "Un'offerta senza data di fine nota o senza prezzo leggibile è etichettata 'Da verificare' e non conta mai come prezzo più basso.",
+    "rule3": "Ciò che l'app non riesce a leggere resta sconosciuto. Nessun prezzo o data viene stimato.",
+    "rule4": "Ogni offerta mostra la fonte e il momento della raccolta.",
+    "rule5": "I prodotti di catene diverse vengono collegati automaticamente. I casi dubbi sono mostrati solo dopo il controllo di una persona.",
+    "unknownTitle": "Cosa l'app non sa",
+    "unknown1": "Se un prodotto è disponibile nel tuo negozio.",
+    "unknown2": "I prezzi che cambiano per negozio o zona.",
+    "unknown3": "Offerte personali e sconti legati a una carta fedeltà o a un'app.",
+    "unknown4": "L'intero assortimento: l'app conosce solo ciò che è o è stato in offerta.",
+    "reportTitle": "Hai visto un errore?",
+    "reportBody": "Nella pagina del prodotto puoi segnalare un prezzo o un collegamento sbagliato. Non serve un account e non viene salvato alcun testo.",
+    "independentTitle": "Indipendente",
+    "independentBody": "SpesaSmart NL è un progetto personale senza legami con i supermercati citati. Non vengono copiati volantini, loghi o foto dei prodotti."
   }
 }

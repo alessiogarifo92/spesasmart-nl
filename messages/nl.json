@@ -173,7 +173,8 @@
     "privacyBody": "Geen account, geen advertenties, geen tracking. Je lijst hoort bij dit apparaat: de app bewaart daarvoor een willekeurig nummer in een cookie, en een tweede cookie onthoudt je taal. Meer wordt er niet opgeslagen.",
     "forgetTitle": "Wis mijn gegevens",
     "forgetBody": "Verwijdert al je lijsten van de server en de cookie van dit apparaat. Dit kan niet ongedaan worden gemaakt.",
-    "forgetConfirm": "Ja, wis alles"
+    "forgetConfirm": "Ja, wis alles",
+    "sourcesLink": "Gegevensbronnen en juistheid"
   },
   "offline": {
     "title": "Geen verbinding",
@@ -351,5 +352,34 @@
     "pagePrevious": "Vorige",
     "pageNext": "Volgende",
     "pageOf": "Pagina {page} van {pages}"
+  },
+  "sources": {
+    "title": "Gegevensbronnen en juistheid",
+    "back": "Meer",
+    "chainsTitle": "Waar de aanbiedingen vandaan komen",
+    "chainsBody": "Per keten zie je wat de app nu toont.",
+    "kind": {
+      "real": "Openbare aanbiedingspagina van de keten",
+      "demo": "Demodata: verzonnen voorbeelden, geen echte prijzen",
+      "mixed": "Openbare aanbiedingspagina van de keten, aangevuld met demodata",
+      "none": "Nu geen aanbiedingen"
+    },
+    "collected": "laatst verzameld {date}",
+    "openData": "Echte aanbiedingen worden hooguit één keer per dag gelezen van de openbare aanbiedingspagina van de keten, niet uit apps of afgeschermde systemen. Demodata is overal gelabeld.",
+    "rulesTitle": "Zo gaat de app met prijzen om",
+    "rule1": "Elke aanbieding heeft haar eigen geldigheid: actieweken verschillen per keten.",
+    "rule2": "Een aanbieding zonder bekende einddatum of zonder leesbare prijs krijgt het label 'Te controleren' en telt niet mee als laagste prijs.",
+    "rule3": "Wat de app niet kan lezen blijft onbekend. Er wordt geen prijs of datum geschat.",
+    "rule4": "Bij elke aanbieding staan de bron en het moment van verzamelen.",
+    "rule5": "Producten van verschillende ketens worden automatisch aan elkaar gekoppeld. Twijfelgevallen worden pas getoond nadat iemand ze heeft bekeken.",
+    "unknownTitle": "Wat de app niet weet",
+    "unknown1": "Of een product in jouw winkel op voorraad is.",
+    "unknown2": "Prijzen die per winkel of regio verschillen.",
+    "unknown3": "Persoonlijke aanbiedingen en kortingen met een klantenkaart of app.",
+    "unknown4": "Het hele assortiment: de app kent alleen wat in de aanbieding is of was.",
+    "reportTitle": "Fout gezien?",
+    "reportBody": "Op de productpagina kun je een verkeerde prijs of een verkeerde koppeling melden. Daar is geen account voor nodig en er wordt geen tekst van je opgeslagen.",
+    "independentTitle": "Onafhankelijk",
+    "independentBody": "SpesaSmart NL is een persoonlijk project zonder band met de genoemde supermarkten. Er worden geen folders, logo's of productfoto's overgenomen."
   }
 }

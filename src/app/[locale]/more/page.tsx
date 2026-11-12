@@ -6,6 +6,7 @@ import { PageHeader } from "@/components/shell/page-header";
 import { buttonClass } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Disclaimer } from "@/components/ui/disclaimer";
+import { Link } from "@/i18n/navigation";
 import { readDeviceId } from "@/server/device";
 import { forgetDeviceAction } from "@/server/list-actions";
 
@@ -51,6 +52,9 @@ export default async function MorePage({ params }: Props) {
       </div>
       <Section title={t("aboutTitle")}>
         <p className="text-muted">{t("aboutBody")}</p>
+        <Link href="/more/sources" className="inline-flex min-h-11 items-center self-start text-[13px] font-semibold">
+          {t("sourcesLink")} ›
+        </Link>
         <Disclaimer />
       </Section>
       <Section title={t("privacyTitle")}>

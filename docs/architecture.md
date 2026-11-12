@@ -37,7 +37,7 @@ flowchart LR
 | `src/worker` | BullMQ entry point and schedules. | `src/ingestion`, `src/lib` |
 | `src/lib` | Database client and other shared infrastructure. | `src/generated` |
 | `src/server` | Database queries used by pages and route handlers; the Server Functions behind forms (`list-actions.ts`, `feedback-actions.ts`), each validating its own input; the device cookie. `catalog.ts` prices a listing today; `search.ts`, `comparison.ts` and `plan.ts` (the route for the device's list) build on it. `admin.ts`, `admin-actions.ts`, `admin-auth.ts` and `admin-session.ts` are the admin panel (below). | `src/domain`, `src/lib` |
-| `src/app` | Pages, layouts, route handlers. | everything above except `src/worker` |
+| `src/app` | Pages, layouts, route handlers; `/more/sources` is the in-app "data sources and accuracy" page, fed by `src/server/sources.ts`. | everything above except `src/worker` |
 | `src/components` | React components: `shell` (layout, navigation), `ui` (primitives from `DESIGN.md`), `offers`, `products`, `list`, `plan`, `settings`, `admin`. | `src/domain` types, `src/i18n`, `src/lib` |
 | `src/i18n`, `messages/` | Routing, request config, translations. | — |
 | `prisma/` | Schema, migrations, seed. | — |

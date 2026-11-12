@@ -173,7 +173,8 @@
     "privacyBody": "No account, no ads, no tracking. Your list belongs to this device: for that the app keeps a random number in a cookie, and a second cookie remembers your language. Nothing else is stored.",
     "forgetTitle": "Delete my data",
     "forgetBody": "Removes all your lists from the server and this device's cookie. This cannot be undone.",
-    "forgetConfirm": "Yes, delete everything"
+    "forgetConfirm": "Yes, delete everything",
+    "sourcesLink": "Data sources and accuracy"
   },
   "offline": {
     "title": "No connection",
@@ -351,5 +352,34 @@
     "pagePrevious": "Previous",
     "pageNext": "Next",
     "pageOf": "Page {page} of {pages}"
+  },
+  "sources": {
+    "title": "Data sources and accuracy",
+    "back": "More",
+    "chainsTitle": "Where the offers come from",
+    "chainsBody": "For each chain, what the app shows right now.",
+    "kind": {
+      "real": "The chain's public offers page",
+      "demo": "Demo data: invented examples, not real prices",
+      "mixed": "The chain's public offers page, plus demo data",
+      "none": "No offers right now"
+    },
+    "collected": "last collected {date}",
+    "openData": "Real offers are read at most once a day from the chain's public offers page, never from apps or protected systems. Demo data is labelled everywhere.",
+    "rulesTitle": "How the app treats prices",
+    "rule1": "Every offer has its own validity: promotion weeks differ per chain.",
+    "rule2": "An offer without a known end date or without a readable price is labelled 'To verify' and never counts as the lowest price.",
+    "rule3": "What the app cannot read stays unknown. No price or date is estimated.",
+    "rule4": "Every offer shows its source and when it was collected.",
+    "rule5": "Products of different chains are linked automatically. Doubtful links are shown only after a person has looked at them.",
+    "unknownTitle": "What the app does not know",
+    "unknown1": "Whether a product is in stock at your store.",
+    "unknown2": "Prices that differ per store or region.",
+    "unknown3": "Personal offers and discounts tied to a loyalty card or app.",
+    "unknown4": "The full range: the app only knows what is or was on offer.",
+    "reportTitle": "Seen a mistake?",
+    "reportBody": "On a product page you can report a wrong price or a wrong link. It needs no account and no text of yours is stored.",
+    "independentTitle": "Independent",
+    "independentBody": "SpesaSmart NL is a personal project with no ties to the supermarkets named. No flyers, logos or product photos are copied."
   }
 }
