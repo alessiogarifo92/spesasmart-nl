@@ -1,4 +1,5 @@
 import type { RetailerAdapter } from "./adapter";
+import { ahAdapter } from "./adapters/ah";
 import { dirkAdapter } from "./adapters/dirk";
 import { jumboAdapter } from "./adapters/jumbo";
 import { MOCK_ADAPTERS } from "./adapters/mock";
@@ -7,7 +8,7 @@ import { MOCK_ADAPTERS } from "./adapters/mock";
  * Adapters that make real requests. Each one runs only when its id is listed in
  * INGESTION_ENABLED_ADAPTERS and its chain has `adapterEnabled` switched on.
  */
-export const REAL_ADAPTERS: readonly RetailerAdapter[] = [jumboAdapter, dirkAdapter];
+export const REAL_ADAPTERS: readonly RetailerAdapter[] = [ahAdapter, jumboAdapter, dirkAdapter];
 
 /** Every adapter the worker schedules. */
 export function allAdapters(): RetailerAdapter[] {

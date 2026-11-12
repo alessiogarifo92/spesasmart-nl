@@ -50,6 +50,23 @@ Off by default. Each one runs only with its id in `INGESTION_ENABLED_ADAPTERS` a
 
 A real adapter writes next to that chain's demo rows; it does not replace them. Rows from a real adapter are not marked `isDemo`.
 
+### Albert Heijn (`ah`)
+
+| | |
+|---|---|
+| Page | `https://www.ah.nl/bonus`, one request per run, one run a day |
+| robots.txt (2026-11-12) | does not restrict `/bonus`; it disallows the group pages behind the cards (`/bonus/groep/…?week=…`), which are stored as an offer's link and never requested. Both are checked in a test against the fixture copy |
+| Read per offer | title, Bonus label ("2 voor 1.99", "1+1 gratis", "2e halve prijs", "40% korting", "voor 0.89"), the prices shown, size line on product cards, note under a group title, link |
+| Not on the page | brand as a field of its own, barcode, validity per offer, next week's Bonus |
+
+- **Two kinds of card.** A product card ("AH Spruitjes", id `wi4095`) has a size and prices and is stored as one product. A group card ("Alle Conimex*") is a range: stored without size under `groep:<id>`, so it does not link to other chains' products.
+- **Prices.** With a struck-through price, that is the regular price and the other the Bonus price. A single price next to a quantity deal ("2 voor 1.99", "1+1 gratis") is the regular price of one item; the deal is computed from it. A single price next to a label the adapter does not understand is not read. Most group cards carry a mechanic and no price: stored without price, shown as "Te controleren".
+- **Tiers** ("2 stuks 35%" with "1 stuk 25%") and labels such as "online Bonus" are kept as text, unverified.
+- **Validity** is the page's own period ("8 t/m 14 november"), the same for every card; the year comes from the run day.
+- **Fields are found by `data-testid` and `aria-label`**: the page's class names are generated and change between releases. If those attributes change, the run fails with "no Bonus cards found".
+- Delivery offers ("gratis bezorging") are left out. The capture had 201 cards; the fixture keeps 10. Whether the plain HTTP response carries all of them, as the rendered capture did, has to be confirmed on the first live run.
+- Personal Bonus offers, the app and its API are not touched.
+
 ### Jumbo (`jumbo`)
 
 | | |
