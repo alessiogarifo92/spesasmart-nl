@@ -39,7 +39,8 @@ erDiagram
 - **`Offer.kind`** separates the weekly cycle from one-day deals (Vomar Dagknallers).
 - **`Retailer.adapterEnabled`** is the per-chain kill switch for the real adapter and is off by default.
 - **Lists and favourites carry a `deviceId`**, a random identifier, not an account: the MVP has no sign-in.
-- **Search** uses `pg_trgm`: a GIN trigram index on `products.normalizedName`, which holds the output of `normalizeName` (`src/domain/search`).
+- **Search** (`src/server/search.ts`) matches every word of the query against `products.normalizedName`, the output of `normalizeName` (`src/domain/search`): as a substring, as a Dutch word stem (PostgreSQL full-text) or, for words of four letters or more, by trigram word similarity (`pg_trgm`), which is what forgives typos. A GIN trigram index covers the substring match; the similarity and full-text conditions are evaluated per row, which is fine for an offers-only catalogue and the first thing to index if it grows.
+- **Today's price of a product** is computed in one place, `loadProducts` (`src/server/catalog.ts`), through the optimiser's `priceCandidate`: search, comparison and the basket plan therefore always agree. An unverified offer never lowers it.
 
 ## Seed
 

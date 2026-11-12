@@ -30,7 +30,7 @@ flowchart LR
 |---|---|---|
 | `src/domain/pricing` | Money, units, validity dates, promotion mechanics. Pure functions. | nothing outside `src/domain` |
 | `src/domain/offers` | What the interface derives from a stored offer: state today, labelled estimates, URL filters. Pure functions. | `src/domain` |
-| `src/domain/search` | Query parsing and synonyms. Pure functions. | `src/domain` |
+| `src/domain/search` | Name normalisation, query parsing (size, barcode, brand, category, flags), Dutch/Italian/English synonyms, fuzzy-match thresholds, lowest-price marks. Pure functions. | `src/domain` |
 | `src/domain/matching` | Product matching and classification. Pure functions. | `src/domain` |
 | `src/domain/optimizer` | Basket optimisation. Pure functions. | `src/domain` |
 | `src/ingestion` | Adapter contract, HTTP client, robots check, validation, runner, adapters. | `src/domain`, `src/lib` |
@@ -38,7 +38,7 @@ flowchart LR
 | `src/lib` | Database client and other shared infrastructure. | `src/generated` |
 | `src/server` | Database queries used by pages and route handlers. | `src/domain`, `src/lib` |
 | `src/app` | Pages, layouts, route handlers. | everything above except `src/worker` |
-| `src/components` | React components: `shell` (layout, navigation), `ui` (primitives from `DESIGN.md`), `settings`. | `src/domain` types, `src/i18n`, `src/lib` |
+| `src/components` | React components: `shell` (layout, navigation), `ui` (primitives from `DESIGN.md`), `offers`, `products`, `settings`. | `src/domain` types, `src/i18n`, `src/lib` |
 | `src/i18n`, `messages/` | Routing, request config, translations. | — |
 | `prisma/` | Schema, migrations, seed. | — |
 | `tests/integration` | Tests that need the database. | — |

@@ -4,13 +4,13 @@ import { cn } from "@/lib/cn";
 import { isoToDbDate } from "@/lib/dates";
 import type { OfferView } from "@/server/offers";
 
-function useMoney() {
+export function useMoney() {
   const format = useFormatter();
   return (cents: number) => format.number(cents / 100, { style: "currency", currency: "EUR" });
 }
 
 /** The mechanic in the interface language; the chain's own wording when it is not a recognised one. */
-function usePromoLabel() {
+export function usePromoLabel() {
   const t = useTranslations("offers");
   const money = useMoney();
   return (offer: OfferView): string | null => {

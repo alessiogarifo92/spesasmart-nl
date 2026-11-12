@@ -99,7 +99,27 @@
   "search": {
     "title": "Search",
     "emptyTitle": "Search for a product",
-    "emptyBody": "Type a product, brand or EAN to compare prices."
+    "emptyBody": "Type a product, brand or EAN to compare prices.",
+    "count": "{count, plural, =0 {No results} one {# result} other {# results}}",
+    "understood": "Searched for",
+    "partEan": "EAN {ean}",
+    "partSize": "size {size}",
+    "partBrand": "brand {brand}",
+    "partCategory": "category {category}",
+    "partOrganic": "organic",
+    "partCheapest": "cheapest first",
+    "attribute": {
+      "glutenFree": "gluten-free",
+      "vegan": "vegan",
+      "lactoseFree": "lactose-free"
+    },
+    "sizeTitle": "In this size",
+    "otherSizesTitle": "Other sizes",
+    "sizeNotFound": "No product found in this size. These are other sizes.",
+    "resultsLabel": "Search results",
+    "noResultsTitle": "Nothing found for “{query}”",
+    "noResultsBody": "Check the spelling or search with fewer words.",
+    "shownOf": "The first {shown} of {total}. Search more specifically to see fewer."
   },
   "more": {
     "title": "More",
@@ -119,5 +139,16 @@
   "offline": {
     "title": "No connection",
     "body": "Prices are not kept offline, so you never see an outdated price. Try again once you are back online."
+  },
+  "product": {
+    "pieces": "pcs",
+    "onOffer": "Offer",
+    "priceUnknown": "Price unknown",
+    "lowestPrice": "Lowest price",
+    "bestUnitKg": "Best price per kg",
+    "bestUnitLitre": "Best price per litre",
+    "bestUnitPiece": "Best price per piece",
+    "dealFrom": "{quantity, plural, one {applies from # item} other {applies from # items}}",
+    "unverifiedOffer": "Offer with unknown validity: not counted in the price."
   }
 }

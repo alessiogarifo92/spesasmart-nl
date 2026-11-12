@@ -36,6 +36,8 @@ export type OfferView = {
   promotion: Promotion;
   /** The mechanic in the chain's own words, when it has one. */
   promoDescription: string | null;
+  /** Price of one item under the offer, when the source states one. */
+  offerPriceCents: number | null;
   regularPriceCents: number | null;
   unitPrice: { cents: number; basis: UnitBasis } | null;
   validFrom: IsoDate | null;
@@ -67,6 +69,7 @@ function toView(row: OfferRow, today: IsoDate): OfferView {
     kind: row.kind,
     promotion,
     promoDescription: row.promoDescription,
+    offerPriceCents: row.currentPriceCents,
     regularPriceCents: row.regularPriceCents,
     unitPrice:
       row.pricePerUnitCents !== null && row.product.unit !== null
@@ -154,6 +157,40 @@ export async function listOffers(
   const rows = await db.offer.findMany({ where, include: offerInclude });
   const offers = rows.map((row) => toView(row, today)).sort(byUrgency);
   return { offers: offers.slice(0, limit), total: offers.length };
+}
+
+/**
+ * The offer in force today for each product: not rejected, started and not
+ * past its last day. With several, a verified one wins, then the lower price.
+ * Offers with unknown validity are returned too; they are shown as "to be
+ * verified" and never used for a price.
+ */
+export async function currentOffers(
+  db: PrismaClient,
+  productIds: string[],
+  today: IsoDate,
+): Promise<Map<string, OfferView>> {
+  if (productIds.length === 0) return new Map();
+  const rows = await db.offer.findMany({
+    where: {
+      AND: [
+        visibleToday(today),
+        { productId: { in: productIds }, OR: [{ validFrom: null }, { validFrom: { lte: isoToDbDate(today) } }] },
+      ],
+    },
+    include: offerInclude,
+  });
+  const best = new Map<string, OfferView>();
+  const views = rows
+    .map((row) => toView(row, today))
+    .sort(
+      (a, b) =>
+        Number(b.verified) - Number(a.verified) ||
+        (a.summary.shownPriceCents ?? Infinity) - (b.summary.shownPriceCents ?? Infinity) ||
+        a.id.localeCompare(b.id),
+    );
+  for (const view of views) if (!best.has(view.productId)) best.set(view.productId, view);
+  return best;
 }
 
 export type OfferFacets = {

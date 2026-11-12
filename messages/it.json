@@ -99,7 +99,27 @@
   "search": {
     "title": "Cerca",
     "emptyTitle": "Cerca un prodotto",
-    "emptyBody": "Scrivi un prodotto, una marca o un EAN per confrontare i prezzi."
+    "emptyBody": "Scrivi un prodotto, una marca o un EAN per confrontare i prezzi.",
+    "count": "{count, plural, =0 {Nessun risultato} one {# risultato} other {# risultati}}",
+    "understood": "Ricerca per",
+    "partEan": "EAN {ean}",
+    "partSize": "formato {size}",
+    "partBrand": "marca {brand}",
+    "partCategory": "categoria {category}",
+    "partOrganic": "biologico",
+    "partCheapest": "prima i più economici",
+    "attribute": {
+      "glutenFree": "senza glutine",
+      "vegan": "vegano",
+      "lactoseFree": "senza lattosio"
+    },
+    "sizeTitle": "In questo formato",
+    "otherSizesTitle": "Altri formati",
+    "sizeNotFound": "Nessun prodotto trovato in questo formato. Questi sono altri formati.",
+    "resultsLabel": "Risultati della ricerca",
+    "noResultsTitle": "Nessun risultato per “{query}”",
+    "noResultsBody": "Controlla l'ortografia o cerca con meno parole.",
+    "shownOf": "I primi {shown} di {total}. Cerca in modo più preciso per vederne meno."
   },
   "more": {
     "title": "Altro",
@@ -119,5 +139,16 @@
   "offline": {
     "title": "Nessuna connessione",
     "body": "I prezzi non vengono conservati offline, così non vedi mai un prezzo superato. Riprova quando torni online."
+  },
+  "product": {
+    "pieces": "pz",
+    "onOffer": "Offerta",
+    "priceUnknown": "Prezzo non noto",
+    "lowestPrice": "Prezzo più basso",
+    "bestUnitKg": "Miglior prezzo al kg",
+    "bestUnitLitre": "Miglior prezzo al litro",
+    "bestUnitPiece": "Miglior prezzo al pezzo",
+    "dealFrom": "{quantity, plural, one {vale da # pezzo} other {vale da # pezzi}}",
+    "unverifiedOffer": "Offerta con validità non nota: non contata nel prezzo."
   }
 }

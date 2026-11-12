@@ -99,7 +99,27 @@
   "search": {
     "title": "Zoeken",
     "emptyTitle": "Zoek een product",
-    "emptyBody": "Typ een product, merk of EAN om prijzen te vergelijken."
+    "emptyBody": "Typ een product, merk of EAN om prijzen te vergelijken.",
+    "count": "{count, plural, =0 {Geen resultaten} one {# resultaat} other {# resultaten}}",
+    "understood": "Gezocht op",
+    "partEan": "EAN {ean}",
+    "partSize": "maat {size}",
+    "partBrand": "merk {brand}",
+    "partCategory": "categorie {category}",
+    "partOrganic": "biologisch",
+    "partCheapest": "goedkoopste eerst",
+    "attribute": {
+      "glutenFree": "glutenvrij",
+      "vegan": "vegan",
+      "lactoseFree": "lactosevrij"
+    },
+    "sizeTitle": "In deze maat",
+    "otherSizesTitle": "Andere maten",
+    "sizeNotFound": "Geen product in deze maat gevonden. Dit zijn andere maten.",
+    "resultsLabel": "Zoekresultaten",
+    "noResultsTitle": "Niets gevonden voor “{query}”",
+    "noResultsBody": "Controleer de spelling of zoek met minder woorden.",
+    "shownOf": "De eerste {shown} van {total}. Zoek specifieker om minder te zien."
   },
   "more": {
     "title": "Meer",
@@ -119,5 +139,16 @@
   "offline": {
     "title": "Geen verbinding",
     "body": "Prijzen worden niet offline bewaard, zodat je nooit een verouderde prijs ziet. Probeer het opnieuw zodra je weer online bent."
+  },
+  "product": {
+    "pieces": "st.",
+    "onOffer": "Aanbieding",
+    "priceUnknown": "Prijs onbekend",
+    "lowestPrice": "Laagste prijs",
+    "bestUnitKg": "Beste prijs per kg",
+    "bestUnitLitre": "Beste prijs per liter",
+    "bestUnitPiece": "Beste prijs per stuk",
+    "dealFrom": "{quantity, plural, one {geldt vanaf # stuk} other {geldt vanaf # stuks}}",
+    "unverifiedOffer": "Aanbieding met onbekende geldigheid: niet meegerekend in de prijs."
   }
 }
