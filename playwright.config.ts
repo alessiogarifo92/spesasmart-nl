@@ -21,6 +21,7 @@ export default defineConfig({
     url: baseURL,
     timeout: 240_000,
     reuseExistingServer: !process.env.CI,
-    env: { DATABASE_URL: process.env.TEST_DATABASE_URL ?? "" },
+    // The admin token exists only for the test server.
+    env: { DATABASE_URL: process.env.TEST_DATABASE_URL ?? "", ADMIN_TOKEN: "e2e-admin-token-0123456789-abcdefghijklm" },
   },
 });

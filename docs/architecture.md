@@ -36,15 +36,25 @@ flowchart LR
 | `src/ingestion` | Adapter contract, HTTP client, robots check, validation, runner, adapters; `match-products.ts` rebuilds the links between the chains' listings after a run. | `src/domain`, `src/lib` |
 | `src/worker` | BullMQ entry point and schedules. | `src/ingestion`, `src/lib` |
 | `src/lib` | Database client and other shared infrastructure. | `src/generated` |
-| `src/server` | Database queries used by pages and route handlers; the Server Functions behind forms (`list-actions.ts`, `feedback-actions.ts`), each validating its own input; the device cookie. `catalog.ts` prices a listing today; `search.ts`, `comparison.ts` and `plan.ts` (the route for the device's list) build on it. | `src/domain`, `src/lib` |
+| `src/server` | Database queries used by pages and route handlers; the Server Functions behind forms (`list-actions.ts`, `feedback-actions.ts`), each validating its own input; the device cookie. `catalog.ts` prices a listing today; `search.ts`, `comparison.ts` and `plan.ts` (the route for the device's list) build on it. `admin.ts`, `admin-actions.ts`, `admin-auth.ts` and `admin-session.ts` are the admin panel (below). | `src/domain`, `src/lib` |
 | `src/app` | Pages, layouts, route handlers. | everything above except `src/worker` |
-| `src/components` | React components: `shell` (layout, navigation), `ui` (primitives from `DESIGN.md`), `offers`, `products`, `list`, `plan`, `settings`. | `src/domain` types, `src/i18n`, `src/lib` |
+| `src/components` | React components: `shell` (layout, navigation), `ui` (primitives from `DESIGN.md`), `offers`, `products`, `list`, `plan`, `settings`, `admin`. | `src/domain` types, `src/i18n`, `src/lib` |
 | `src/i18n`, `messages/` | Routing, request config, translations. | — |
 | `prisma/` | Schema, migrations, seed. | — |
 | `tests/integration` | Tests that need the database. | — |
 | `tests/e2e` | Playwright tests against a production build. | — |
 
 `src/domain` never touches the database, the network, the clock or environment variables: anything it needs is passed in. That is what keeps it unit-testable and lets the worker and the web app share it.
+
+## Admin panel
+
+`/admin` (chains, latest runs, price reports, categories) and `/admin/matches` (links between listings that wait for a decision). It is for the one person who runs the app.
+
+- **Off by default.** With `ADMIN_TOKEN` empty or shorter than 32 characters the pages answer 404 and every admin Server Function refuses.
+- **Sign-in.** The token is exchanged for a cookie (`ss_admin`: HttpOnly, SameSite=Strict, 8 hours) holding an expiry and an HMAC made with the token. Nothing is stored on the server; changing the token ends every session. There is no lockout after wrong tokens: it would let anyone keep the owner out, and a random token of that length cannot be guessed. Known limits: signing out removes the cookie from the browser but a copy of it stays valid until it expires (change the token to end it), and the cookie is marked Secure only when the proxy in front sends `X-Forwarded-Proto: https`.
+- **Every page and every action checks the session itself.** `AdminGate` renders only the sign-in form without one and does not run the admin queries; the Server Functions are public POST endpoints and each starts with `isAdmin()`.
+- **Chains.** Two switches per chain: `active` (shown in the app) and `adapterEnabled` (the real adapter may run). The runner reads `adapterEnabled` when a run starts, so a change applies from the next run. `INGESTION_ENABLED_ADAPTERS` stays the second switch and can only be changed in the environment.
+- **Links.** The queue holds links with status `NEEDS_REVIEW` and links a visitor reported. A decision sets `CONFIRMED` with the chosen type, or `REJECTED`; the matcher never changes a decided link (see `data-model.md`).
 
 ## Conventions
 
