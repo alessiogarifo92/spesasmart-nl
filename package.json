@@ -19,6 +19,7 @@
     "db:seed": "prisma db seed",
     "db:test:deploy": "node --env-file-if-exists=.env scripts/migrate-test-db.mjs",
     "worker": "tsx src/worker/index.ts",
+    "ingest": "tsx src/ingestion/cli.ts",
     "postinstall": "prisma generate"
   },
   "dependencies": {

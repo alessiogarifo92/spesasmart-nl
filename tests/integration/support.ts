@@ -19,6 +19,7 @@ export async function createScratchRetailer(label: string) {
   });
   return {
     id: retailer.id,
+    slug: retailer.slug,
     remove: () => db.retailer.delete({ where: { id: retailer.id } }),
   };
 }

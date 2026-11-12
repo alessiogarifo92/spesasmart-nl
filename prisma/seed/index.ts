@@ -1,11 +1,16 @@
 import { createHash } from "node:crypto";
 import type { PrismaClient } from "@/generated/prisma/client";
 import { normalizeName } from "@/domain/search/normalize";
-import { addDays, isoToDbDate, type IsoDate } from "@/lib/dates";
-import { DEMO_OFFERS, DEMO_PRODUCTS, type DemoOffer, type DemoProduct } from "./demo";
+import { MOCK_ADAPTERS } from "@/ingestion/adapters/mock";
+import { isDemoOfferListed } from "@/ingestion/adapters/mock/catalogue";
+import { dedupeKeyHash } from "@/ingestion/hash";
+import { createOfflineHttpClient } from "@/ingestion/http";
+import { runAll } from "@/ingestion/runner";
+import type { IsoDate } from "@/lib/dates";
+import { DEMO_OFFERS, DEMO_PRODUCTS, DEMO_SOURCE_URL } from "./demo";
 import { CATEGORIES, RETAILERS, type RetailerSlug } from "./reference";
 
-export const DEMO_SOURCE_URL = "demo:seed";
+export { DEMO_SOURCE_URL };
 
 export type SeedOptions = {
   /** Seed day in Europe/Amsterdam; demo validity is counted from it. */
@@ -18,21 +23,41 @@ export type SeedOptions = {
 
 export type SeedResult = { retailers: number; categories: number; products: number; offers: number };
 
-/** Cents per kg, per litre or per piece for one sales unit; rounds half up. */
-function unitPriceCents(priceCents: number, product: DemoProduct): number {
-  const total = product.packageAmount * (product.packageCount ?? 1);
-  return product.unit === "PIECE"
-    ? Math.round(priceCents / total)
-    : Math.round((priceCents * 1000) / total);
-}
-
-function demoHash(key: string): string {
+/** Content hash this seed gave demo offers before they went through the ingestion pipeline. */
+function legacyDemoHash(key: string): string {
   return createHash("sha256").update(`demo:${key}`).digest("hex");
 }
 
 /**
+ * Demo offers written by the earlier seed carry a content hash the pipeline never
+ * produces. Re-key each one to the pipeline's hash so the row (and anything pointing at
+ * it) is kept; remove it when the pipeline row already exists or the offer is no longer
+ * listed. Touches only demo rows from `DEMO_SOURCE_URL`. A no-op once a database has
+ * been seeded with this version.
+ */
+async function migrateLegacyDemoOffers(db: PrismaClient, retailerIds: Map<RetailerSlug, string>): Promise<void> {
+  for (const offer of DEMO_OFFERS) {
+    const retailerId = retailerIds.get(offer.retailer)!;
+    const legacy = await db.offer.findUnique({
+      where: { retailerId_contentHash: { retailerId, contentHash: legacyDemoHash(offer.key) } },
+      select: { id: true, isDemo: true, sourceUrl: true },
+    });
+    if (!legacy || !legacy.isDemo || legacy.sourceUrl !== DEMO_SOURCE_URL) continue;
+
+    const contentHash = dedupeKeyHash(offer.retailer, offer.key);
+    const current = await db.offer.findUnique({
+      where: { retailerId_contentHash: { retailerId, contentHash } },
+      select: { id: true },
+    });
+    if (current || !isDemoOfferListed(offer)) await db.offer.delete({ where: { id: legacy.id } });
+    else await db.offer.update({ where: { id: legacy.id }, data: { contentHash } });
+  }
+}
+
+/**
  * Writes reference data and, unless disabled, the demo catalogue. Safe to run
- * repeatedly: every row is matched on a stable key and updated in place.
+ * repeatedly: every row is matched on a stable key and updated in place. Demo offers
+ * are produced by the four mock adapters through the real ingestion pipeline.
  */
 export async function seedDatabase(db: PrismaClient, options: SeedOptions): Promise<SeedResult> {
   const retailerIds = new Map<RetailerSlug, string>();
@@ -64,9 +89,9 @@ export async function seedDatabase(db: PrismaClient, options: SeedOptions): Prom
   };
   if (options.withDemo === false) return result;
 
-  /** Product id per `concept` and retailer. */
-  const productIds = new Map<string, string>();
   for (const product of DEMO_PRODUCTS) {
+    const categoryId = categoryIds.get(product.category);
+    if (!categoryId) throw new Error(`Demo product "${product.concept}" has unknown category "${product.category}"`);
     for (const [slug, variant] of Object.entries(product.variants) as [
       RetailerSlug,
       { name: string; regularCents: number },
@@ -76,7 +101,7 @@ export async function seedDatabase(db: PrismaClient, options: SeedOptions): Prom
         name: variant.name,
         normalizedName: normalizeName(variant.name),
         brand: product.brand ?? null,
-        categoryId: categoryIds.get(product.category)!,
+        categoryId,
         ean: product.ean ?? null,
         unit: product.unit,
         packageAmount: product.packageAmount,
@@ -91,7 +116,6 @@ export async function seedDatabase(db: PrismaClient, options: SeedOptions): Prom
         update: data,
         create: { ...data, retailerId, externalId },
       });
-      productIds.set(`${product.concept}@${slug}`, row.id);
       result.products += 1;
 
       // One regular-price record per demo product, refreshed in place.
@@ -105,55 +129,20 @@ export async function seedDatabase(db: PrismaClient, options: SeedOptions): Prom
     }
   }
 
-  for (const offer of DEMO_OFFERS) {
-    await upsertDemoOffer(db, offer, retailerIds, productIds, options);
-    result.offers += 1;
-  }
-  return result;
-}
-
-async function upsertDemoOffer(
-  db: PrismaClient,
-  offer: DemoOffer,
-  retailerIds: Map<RetailerSlug, string>,
-  productIds: Map<string, string>,
-  options: SeedOptions,
-): Promise<void> {
-  const product = DEMO_PRODUCTS.find((candidate) => candidate.concept === offer.concept);
-  const variant = product?.variants[offer.retailer];
-  const productId = productIds.get(`${offer.concept}@${offer.retailer}`);
-  if (!product || !variant || !productId) {
-    throw new Error(`Demo offer "${offer.key}" points at a product that ${offer.retailer} does not sell`);
-  }
-
-  const retailerId = retailerIds.get(offer.retailer)!;
-  const currentPriceCents = "currentCents" in offer ? offer.currentCents : null;
-  const validityKnown = offer.untilOffset !== null;
-  const data = {
-    productId,
-    title: variant.name,
-    kind: offer.kind ?? "WEEKLY",
-    currentPriceCents,
-    regularPriceCents: variant.regularCents,
-    promoType: offer.promoType,
-    promoParams: "promoParams" in offer ? offer.promoParams : {},
-    promoDescription: offer.promoDescription ?? null,
-    pricePerUnitCents: currentPriceCents === null ? null : unitPriceCents(currentPriceCents, product),
-    validFrom: offer.fromOffset === null ? null : isoToDbDate(addDays(options.today, offer.fromOffset)),
-    validUntil: offer.untilOffset === null ? null : isoToDbDate(addDays(options.today, offer.untilOffset)),
-    conditions: offer.conditions ?? null,
-    // An offer whose validity is unknown is never presented as verified.
-    status: validityKnown ? ("VERIFIED" as const) : ("UNVERIFIED" as const),
-    confidence: validityKnown ? 1 : 0.5,
-    sourceUrl: DEMO_SOURCE_URL,
-    collectedAt: options.now,
-    rawPayload: { demo: true, key: offer.key },
-    isDemo: true,
-  };
-  const contentHash = demoHash(offer.key);
-  await db.offer.upsert({
-    where: { retailerId_contentHash: { retailerId, contentHash } },
-    update: data,
-    create: { ...data, retailerId, contentHash },
+  await migrateLegacyDemoOffers(db, retailerIds);
+  const runs = await runAll([...MOCK_ADAPTERS], {
+    db,
+    // Mock adapters make no requests: any attempt would fail loudly.
+    createHttp: createOfflineHttpClient,
+    now: () => options.now,
+    today: () => options.today,
+    enabledAdapters: [],
   });
+  const failed = runs.filter((run) => run.status !== "SUCCESS");
+  if (runs.length !== MOCK_ADAPTERS.length || failed.length > 0) {
+    const detail = failed.map(({ adapter, status, errors }) => ({ adapter, status, errors }));
+    throw new Error(`Demo ingestion did not succeed: ${JSON.stringify(detail)}`);
+  }
+  result.offers = runs.reduce((total, run) => total + run.itemsUpdated, 0);
+  return result;
 }

@@ -65,7 +65,8 @@ flowchart LR
 |---|---|
 | `docker compose up -d` | starts PostgreSQL and Redis |
 | `npm run dev` | app on http://localhost:3000 |
-| `npm run worker` | ingestion worker |
+| `npm run worker` | ingestion worker (needs Redis) |
+| `npm run ingest -- <adapter-id\|all>` | one collection run without Redis |
 | `npm run db:migrate` | creates and applies a migration on the development database |
 | `npm run db:test:deploy` | applies migrations to the test database |
 | `npm run db:seed` | seeds retailers, categories and labelled demo data |

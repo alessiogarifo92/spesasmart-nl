@@ -1,11 +1,17 @@
+import { createHash } from "node:crypto";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { db } from "@/lib/db";
+import { isDemoOfferListed } from "@/ingestion/adapters/mock/catalogue";
+import { dedupeKeyHash } from "@/ingestion/hash";
 import { isValidDemoEan } from "./support";
 import { DEMO_OFFERS, DEMO_PRODUCTS } from "../../prisma/seed/demo";
 import { DEMO_SOURCE_URL, seedDatabase } from "../../prisma/seed/index";
 
 const today = "2026-11-11";
 const now = new Date("2026-11-11T08:00:00Z");
+const MOCK_ADAPTER_IDS = ["mock:ah", "mock:jumbo", "mock:vomar", "mock:dirk"];
+/** Catalogue offers the mock adapters emit: all but the one that already ended. */
+const LISTED_OFFERS = DEMO_OFFERS.filter(isDemoOfferListed);
 
 async function counts() {
   const [retailers, categories, products, offers, prices] = await Promise.all([
@@ -19,8 +25,9 @@ async function counts() {
 }
 
 describe("seed", () => {
+  let first: Awaited<ReturnType<typeof seedDatabase>>;
   beforeAll(async () => {
-    await seedDatabase(db, { today, now });
+    first = await seedDatabase(db, { today, now });
   });
   afterAll(() => db.$disconnect());
 
@@ -42,9 +49,11 @@ describe("seed", () => {
       retailers: 4,
       categories: 12,
       products: expectedProducts,
-      offers: DEMO_OFFERS.length,
+      offers: LISTED_OFFERS.length,
       prices: expectedProducts,
     });
+    expect(LISTED_OFFERS).toHaveLength(17);
+    expect(first).toEqual({ retailers: 4, categories: 12, products: expectedProducts, offers: LISTED_OFFERS.length });
     expect(await db.product.count({ where: { externalId: { startsWith: "demo-" }, isDemo: false } })).toBe(0);
     expect(await db.offer.count({ where: { sourceUrl: DEMO_SOURCE_URL, isDemo: false } })).toBe(0);
   });
@@ -72,19 +81,55 @@ describe("seed", () => {
     });
   });
 
+  it("produces the demo offers through the ingestion pipeline, leaving no run open", async () => {
+    const runs = await db.ingestionRun.findMany({ where: { adapter: { in: MOCK_ADAPTER_IDS }, startedAt: now } });
+    expect(runs.length).toBeGreaterThanOrEqual(4);
+    expect(runs.every((run) => run.status === "SUCCESS" && run.finishedAt !== null)).toBe(true);
+    expect(await db.ingestionRun.count({ where: { adapter: { in: MOCK_ADAPTER_IDS }, status: "RUNNING" } })).toBe(0);
+
+    const kipfilet = await db.offer.findFirstOrThrow({
+      where: { isDemo: true, title: "Kipfilet 500 g", retailer: { slug: "dirk" } },
+    });
+    expect(kipfilet.contentHash).toBe(dedupeKeyHash("dirk", "dirk-kipfilet"));
+    expect(kipfilet.rawPayload).toMatchObject({ price: "349", regularPrice: "499", validity: "ma 9 t/m zo 15 nov" });
+    expect(kipfilet.confidence).toBe(1);
+  });
+
+  it("replaces offers the earlier seed wrote under its own content hash", async () => {
+    const legacyHash = (key: string) => createHash("sha256").update(`demo:${key}`).digest("hex");
+    const dirk = await db.retailer.findUniqueOrThrow({ where: { slug: "dirk" } });
+    const ah = await db.retailer.findUniqueOrThrow({ where: { slug: "ah" } });
+    const product = await db.product.findFirstOrThrow({ where: { retailerId: dirk.id, externalId: "demo-kipfilet-500g" } });
+    const appels = await db.product.findFirstOrThrow({ where: { retailerId: ah.id, externalId: "demo-elstar-appels-1kg" } });
+    const legacy = { title: "Legacy", sourceUrl: DEMO_SOURCE_URL, collectedAt: now, isDemo: true };
+    // Once for an offer the adapters now produce, once for the expired one they never emit.
+    await db.offer.createMany({
+      data: [
+        { ...legacy, productId: product.id, retailerId: dirk.id, contentHash: legacyHash("dirk-kipfilet") },
+        { ...legacy, productId: appels.id, retailerId: ah.id, contentHash: legacyHash("ah-appels-verlopen") },
+      ],
+      skipDuplicates: true,
+    });
+
+    await seedDatabase(db, { today, now });
+    expect(await db.offer.count({ where: { title: "Legacy", isDemo: true } })).toBe(0);
+    expect((await counts()).offers).toBe(LISTED_OFFERS.length);
+  });
+
   it("keeps an offer with unknown validity unverified", async () => {
     const unknown = await db.offer.findMany({ where: { isDemo: true, validUntil: null } });
     expect(unknown.length).toBeGreaterThan(0);
     expect(unknown.every((offer) => offer.status === "UNVERIFIED")).toBe(true);
   });
 
-  it("covers running, ending-today, upcoming and expired offers", async () => {
+  it("covers running, ending-today and upcoming offers, and none already expired", async () => {
     const day = new Date("2026-11-11T00:00:00.000Z");
     const where = { isDemo: true } as const;
     expect(await db.offer.count({ where: { ...where, validFrom: { lte: day }, validUntil: { gte: day } } })).toBeGreaterThan(5);
     expect(await db.offer.count({ where: { ...where, validUntil: day, kind: "DAILY" } })).toBe(1);
     expect(await db.offer.count({ where: { ...where, validFrom: { gt: day } } })).toBeGreaterThan(0);
-    expect(await db.offer.count({ where: { ...where, validUntil: { lt: day } } })).toBeGreaterThan(0);
+    // Validation rejects an expired offer, so the expired catalogue offer produces no row.
+    expect(await db.offer.count({ where: { ...where, validUntil: { lt: day } } })).toBe(0);
   });
 
   it("gives branded demo products the same in-store barcode across chains", async () => {
