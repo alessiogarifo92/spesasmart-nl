@@ -58,9 +58,11 @@ test.describe("app shell at 390 px", () => {
 
     await page.getByRole("link", { name: "English" }).click();
     await expect(page).toHaveURL(/\/en\/more$/);
+    await expect(page.locator("html")).toHaveAttribute("lang", "en");
     await page.getByRole("link", { name: "Nederlands" }).click();
-    await expect(page).toHaveURL(/\/more$/);
+    await expect(page).toHaveURL(/:\d+\/more$/);
     await expect(page.locator("html")).toHaveAttribute("lang", "nl");
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText("Meer");
   });
 });
 
