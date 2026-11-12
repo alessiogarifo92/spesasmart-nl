@@ -187,6 +187,24 @@
     "bestUnitLitre": "Beste prijs per liter",
     "bestUnitPiece": "Beste prijs per stuk",
     "dealFrom": "{quantity, plural, one {geldt vanaf # stuk} other {geldt vanaf # stuks}}",
-    "unverifiedOffer": "Aanbieding met onbekende geldigheid: niet meegerekend in de prijs."
+    "unverifiedOffer": "Aanbieding met onbekende geldigheid: niet meegerekend in de prijs.",
+    "compare": "Vergelijk",
+    "compareNamed": "Vergelijk prijzen van {name}",
+    "comparisonTitle": "Prijsvergelijking",
+    "elsewhereTitle": "Bij andere winkels",
+    "alternativesTitle": "Alternatieven",
+    "alternativesHint": "Een andere maat of variant. Vergelijk de prijs per kg, liter of stuk.",
+    "tierSame": "Zelfde product",
+    "tierSimilar": "Zeer vergelijkbaar",
+    "tierAlternative": "Alternatief",
+    "noMatchesTitle": "Nog niets om mee te vergelijken",
+    "noMatchesBody": "Bij de andere winkels is geen product gevonden dat hier met voldoende zekerheid bij hoort.",
+    "matchNote": "Producten worden automatisch aan elkaar gekoppeld. Dat kan fout gaan: meld het als iets niet klopt.",
+    "reportMatch": "Klopt niet?",
+    "reportMatchNamed": "Meld dat {name} van {retailer} niet hetzelfde product is",
+    "reportPrice": "Prijs klopt niet?",
+    "reportPriceNamed": "Meld dat de prijs van {name} bij {retailer} niet klopt",
+    "reported": "Gemeld, bedankt.",
+    "reportFailed": "Melden lukte niet. Probeer het later opnieuw."
   }
 }

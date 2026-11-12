@@ -53,7 +53,13 @@ describe("seed", () => {
       prices: expectedProducts,
     });
     expect(LISTED_OFFERS).toHaveLength(17);
-    expect(first).toEqual({ retailers: 4, categories: 12, products: expectedProducts, offers: LISTED_OFFERS.length });
+    expect(first).toEqual({
+      retailers: 4,
+      categories: 12,
+      products: expectedProducts,
+      offers: LISTED_OFFERS.length,
+      matches: expect.any(Number),
+    });
     expect(await db.product.count({ where: { externalId: { startsWith: "demo-" }, isDemo: false } })).toBe(0);
     expect(await db.offer.count({ where: { sourceUrl: DEMO_SOURCE_URL, isDemo: false } })).toBe(0);
   });
@@ -99,8 +105,12 @@ describe("seed", () => {
     const legacyHash = (key: string) => createHash("sha256").update(`demo:${key}`).digest("hex");
     const dirk = await db.retailer.findUniqueOrThrow({ where: { slug: "dirk" } });
     const ah = await db.retailer.findUniqueOrThrow({ where: { slug: "ah" } });
-    const product = await db.product.findFirstOrThrow({ where: { retailerId: dirk.id, externalId: "demo-kipfilet-500g" } });
-    const appels = await db.product.findFirstOrThrow({ where: { retailerId: ah.id, externalId: "demo-elstar-appels-1kg" } });
+    const product = await db.product.findFirstOrThrow({
+      where: { retailerId: dirk.id, externalId: "demo-kipfilet-500g" },
+    });
+    const appels = await db.product.findFirstOrThrow({
+      where: { retailerId: ah.id, externalId: "demo-elstar-appels-1kg" },
+    });
     const legacy = { title: "Legacy", sourceUrl: DEMO_SOURCE_URL, collectedAt: now, isDemo: true };
     // Once for an offer the adapters now produce, once for the expired one they never emit.
     await db.offer.createMany({
@@ -125,7 +135,9 @@ describe("seed", () => {
   it("covers running, ending-today and upcoming offers, and none already expired", async () => {
     const day = new Date("2026-11-11T00:00:00.000Z");
     const where = { isDemo: true } as const;
-    expect(await db.offer.count({ where: { ...where, validFrom: { lte: day }, validUntil: { gte: day } } })).toBeGreaterThan(5);
+    expect(
+      await db.offer.count({ where: { ...where, validFrom: { lte: day }, validUntil: { gte: day } } }),
+    ).toBeGreaterThan(5);
     expect(await db.offer.count({ where: { ...where, validUntil: day, kind: "DAILY" } })).toBe(1);
     expect(await db.offer.count({ where: { ...where, validFrom: { gt: day } } })).toBeGreaterThan(0);
     // Validation rejects an expired offer, so the expired catalogue offer produces no row.
@@ -139,9 +151,48 @@ describe("seed", () => {
     expect(isValidDemoEan(coffee[0].ean!)).toBe(true);
   });
 
+  it("links the chains' listings of one product, and leaves doubtful links for review", async () => {
+    const chains = (await db.retailer.findMany({ where: { slug: { in: ["ah", "jumbo", "vomar", "dirk"] } } })).map(
+      (r) => r.id,
+    );
+    const links = await db.productMatch.findMany({
+      where: { canonicalProduct: { retailerId: { in: chains } } },
+      select: {
+        matchType: true,
+        status: true,
+        canonicalProduct: { select: { name: true, externalId: true, retailerId: true } },
+        candidateProduct: { select: { name: true, externalId: true, retailerId: true } },
+      },
+    });
+    expect(first.matches).toBe(links.length);
+    // Never two listings of one chain.
+    expect(links.filter((link) => link.canonicalProduct.retailerId === link.candidateProduct.retailerId)).toEqual([]);
+    // One barcode at three chains: three SAME links.
+    const coffee = links.filter((link) => link.canonicalProduct.externalId === "demo-molenhof-koffiebonen-1kg");
+    expect(coffee.map((link) => [link.matchType, link.status])).toEqual(Array(3).fill(["SAME", "AUTO"]));
+    // A link shown without review never joins two different demo products, except two sizes of one thing.
+    const sizes = (id: string | null) => id?.replace(/-(1l|2l)$/, "");
+    const crossed = links.filter(
+      (link) =>
+        link.status === "AUTO" && sizes(link.canonicalProduct.externalId) !== sizes(link.candidateProduct.externalId),
+    );
+    expect(crossed.map((link) => `${link.canonicalProduct.name} / ${link.candidateProduct.name}`)).toEqual([]);
+    // 1 l and 2 l milk are alternatives of each other, shown without review.
+    const milk = links.filter(
+      (link) =>
+        link.canonicalProduct.externalId !== link.candidateProduct.externalId &&
+        [link.canonicalProduct.externalId, link.candidateProduct.externalId].every((id) =>
+          id?.startsWith("demo-halfvolle-melk"),
+        ),
+    );
+    expect(milk.length).toBeGreaterThan(0);
+    expect(new Set(milk.map((link) => `${link.matchType}/${link.status}`))).toEqual(new Set(["ALTERNATIVE/AUTO"]));
+    expect(links.some((link) => link.status === "NEEDS_REVIEW")).toBe(true);
+  });
+
   it("can seed reference data alone", async () => {
     const result = await seedDatabase(db, { today, now, withDemo: false });
-    expect(result).toEqual({ retailers: 4, categories: 12, products: 0, offers: 0 });
+    expect(result).toEqual({ retailers: 4, categories: 12, products: 0, offers: 0, matches: 0 });
   });
 
   it("finds a product by a misspelt name through the trigram index", async () => {

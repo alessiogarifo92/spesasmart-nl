@@ -187,6 +187,24 @@
     "bestUnitLitre": "Miglior prezzo al litro",
     "bestUnitPiece": "Miglior prezzo al pezzo",
     "dealFrom": "{quantity, plural, one {vale da # pezzo} other {vale da # pezzi}}",
-    "unverifiedOffer": "Offerta con validità non nota: non contata nel prezzo."
+    "unverifiedOffer": "Offerta con validità non nota: non contata nel prezzo.",
+    "compare": "Confronta",
+    "compareNamed": "Confronta i prezzi di {name}",
+    "comparisonTitle": "Confronto prezzi",
+    "elsewhereTitle": "Negli altri negozi",
+    "alternativesTitle": "Alternative",
+    "alternativesHint": "Un altro formato o una variante. Confronta il prezzo al kg, al litro o al pezzo.",
+    "tierSame": "Stesso prodotto",
+    "tierSimilar": "Molto simile",
+    "tierAlternative": "Alternativa",
+    "noMatchesTitle": "Ancora niente da confrontare",
+    "noMatchesBody": "Negli altri negozi non è stato trovato un prodotto che corrisponda a questo con sufficiente certezza.",
+    "matchNote": "I prodotti vengono collegati in automatico. Può sbagliare: segnalalo se qualcosa non torna.",
+    "reportMatch": "Non torna?",
+    "reportMatchNamed": "Segnala che {name} di {retailer} non è lo stesso prodotto",
+    "reportPrice": "Prezzo sbagliato?",
+    "reportPriceNamed": "Segnala che il prezzo di {name} da {retailer} è sbagliato",
+    "reported": "Segnalato, grazie.",
+    "reportFailed": "Segnalazione non riuscita. Riprova più tardi."
   }
 }

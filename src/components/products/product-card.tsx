@@ -2,6 +2,7 @@ import { useFormatter, useTranslations } from "next-intl";
 import { AddToList } from "@/components/list/add-to-list";
 import { useMoney, usePromoLabel } from "@/components/offers/offer-card";
 import { Card } from "@/components/ui/card";
+import { ChipLink } from "@/components/ui/chip";
 import { cn } from "@/lib/cn";
 import type { CatalogProduct } from "@/server/catalog";
 
@@ -11,6 +12,8 @@ type Props = {
   bestUnitPrice?: boolean;
   /** How many of this product are on the shopping list already. */
   listed?: number;
+  /** Link to the price comparison of this product; off on that page itself. */
+  compare?: boolean;
 };
 
 /**
@@ -18,7 +21,13 @@ type Props = {
  * (shelf price, or a verified running offer); an offer that needs several items
  * or cannot be verified is described next to it and never changes it.
  */
-export function ProductCard({ product, lowestPrice = false, bestUnitPrice = false, listed = 0 }: Props) {
+export function ProductCard({
+  product,
+  lowestPrice = false,
+  bestUnitPrice = false,
+  listed = 0,
+  compare = true,
+}: Props) {
   const t = useTranslations("product");
   const offers = useTranslations("offers");
   const common = useTranslations("common");
@@ -37,14 +46,19 @@ export function ProductCard({ product, lowestPrice = false, bestUnitPrice = fals
   const unitKey = { kg: "perKg", l: "perLitre", piece: "perPiece" } as const;
   const bestKey = { kg: "bestUnitKg", l: "bestUnitLitre", piece: "bestUnitPiece" } as const;
   const facts = [
-    price?.usedOffer && price.regularTotalCents !== null ? offers("from", { price: money(price.regularTotalCents) }) : null,
+    price?.usedOffer && price.regularTotalCents !== null
+      ? offers("from", { price: money(price.regularTotalCents) })
+      : null,
     price?.unitPrice ? offers(unitKey[price.unitPrice.basis], { price: money(price.unitPrice.cents) }) : null,
   ].filter(Boolean);
   // A mechanic that is not in the price shown: it needs more items, or it could not be verified.
   const mechanic = offer && !price?.usedOffer ? promoLabel(offer) : null;
-  const source = price?.usedOffer && offer ? { url: offer.sourceUrl, at: offer.collectedAt } : product.priceSource
-    ? { url: product.priceSource.url, at: product.priceSource.recordedAt }
-    : null;
+  const source =
+    price?.usedOffer && offer
+      ? { url: offer.sourceUrl, at: offer.collectedAt }
+      : product.priceSource
+        ? { url: product.priceSource.url, at: product.priceSource.recordedAt }
+        : null;
 
   return (
     <Card
@@ -71,19 +85,26 @@ export function ProductCard({ product, lowestPrice = false, bestUnitPrice = fals
           {facts.length > 0 && <span className="text-label text-muted">{facts.join(" · ")}</span>}
           {mechanic && offer?.verified && price?.hint && (
             <span className="text-label text-text">
-              <span className="font-semibold">{mechanic}</span> · {t("dealFrom", { quantity: price.hint.minimumQuantity })}
+              <span className="font-semibold">{mechanic}</span> ·{" "}
+              {t("dealFrom", { quantity: price.hint.minimumQuantity })}
             </span>
           )}
         </div>
         <span className="shrink-0 text-right font-display text-[18px] leading-6 font-semibold">
-          {price ? money(price.totalCents) : <span className="font-sans text-label font-normal text-muted">{t("priceUnknown")}</span>}
+          {price ? (
+            money(price.totalCents)
+          ) : (
+            <span className="font-sans text-label font-normal text-muted">{t("priceUnknown")}</span>
+          )}
         </span>
       </div>
 
       {(lowestPrice || bestUnitPrice) && (
         <div className="flex flex-wrap gap-1.5">
           {lowestPrice && (
-            <span className="rounded-pill bg-accent px-2 py-0.5 text-[11px] leading-4 font-semibold text-on-accent">{t("lowestPrice")}</span>
+            <span className="rounded-pill bg-accent px-2 py-0.5 text-[11px] leading-4 font-semibold text-on-accent">
+              {t("lowestPrice")}
+            </span>
           )}
           {bestUnitPrice && price?.unitPrice && (
             <span className="rounded-pill border border-accent px-2 py-0.5 text-[11px] leading-4 font-semibold text-accent">
@@ -95,7 +116,9 @@ export function ProductCard({ product, lowestPrice = false, bestUnitPrice = fals
 
       {offer && !offer.verified && (
         <p className="flex flex-wrap items-center gap-1.5 text-[11px] leading-4 text-muted">
-          <span className="rounded-pill border border-warn px-2 py-0.5 font-semibold text-warn">{common("toVerify")}</span>
+          <span className="rounded-pill border border-warn px-2 py-0.5 font-semibold text-warn">
+            {common("toVerify")}
+          </span>
           {t("unverifiedOffer")}
         </p>
       )}
@@ -111,11 +134,19 @@ export function ProductCard({ product, lowestPrice = false, bestUnitPrice = fals
             offers("sourceDemo")
           )}
           {" · "}
-          {offers("updated", { date: format.dateTime(source.at, { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }) })}
+          {offers("updated", {
+            date: format.dateTime(source.at, { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }),
+          })}
         </p>
       )}
 
-      <AddToList productId={product.id} name={product.name} quantity={listed} />
+      <AddToList productId={product.id} name={product.name} quantity={listed}>
+        {compare && (
+          <ChipLink href={`/product/${product.id}`} aria-label={t("compareNamed", { name: product.name })}>
+            {t("compare")}
+          </ChipLink>
+        )}
+      </AddToList>
     </Card>
   );
 }

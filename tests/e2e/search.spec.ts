@@ -93,7 +93,9 @@ test.describe("search", () => {
     await expect(page.getByRole("list", { name: "In questo formato" }).getByTestId("product-card")).toHaveCount(4);
     await expect(page.getByText("Prezzo più basso")).toBeVisible();
     await expect(page.getByText("Miglior prezzo al litro")).toBeVisible();
-    await expect(page.getByText("4 risultati")).toBeVisible();
+    // Four 1 l packs, and the two 2 l packs under "other sizes".
+    await expect(page.getByText("6 risultati")).toBeVisible();
+    await expect(page.getByRole("list", { name: "Altri formati" }).getByTestId("product-card")).toHaveCount(2);
   });
 
   test("nothing found, and nothing asked, each have their own state", async ({ page }) => {

@@ -5,6 +5,7 @@ import { MOCK_ADAPTERS } from "@/ingestion/adapters/mock";
 import { isDemoOfferListed } from "@/ingestion/adapters/mock/catalogue";
 import { dedupeKeyHash } from "@/ingestion/hash";
 import { createOfflineHttpClient } from "@/ingestion/http";
+import { rebuildMatches } from "@/ingestion/match-products";
 import { runAll } from "@/ingestion/runner";
 import type { IsoDate } from "@/lib/dates";
 import { DEMO_OFFERS, DEMO_PRODUCTS, DEMO_SOURCE_URL } from "./demo";
@@ -21,7 +22,7 @@ export type SeedOptions = {
   withDemo?: boolean;
 };
 
-export type SeedResult = { retailers: number; categories: number; products: number; offers: number };
+export type SeedResult = { retailers: number; categories: number; products: number; offers: number; matches: number };
 
 /** Content hash this seed gave demo offers before they went through the ingestion pipeline. */
 function legacyDemoHash(key: string): string {
@@ -86,6 +87,7 @@ export async function seedDatabase(db: PrismaClient, options: SeedOptions): Prom
     categories: CATEGORIES.length,
     products: 0,
     offers: 0,
+    matches: 0,
   };
   if (options.withDemo === false) return result;
 
@@ -144,5 +146,11 @@ export async function seedDatabase(db: PrismaClient, options: SeedOptions): Prom
     throw new Error(`Demo ingestion did not succeed: ${JSON.stringify(detail)}`);
   }
   result.offers = runs.reduce((total, run) => total + run.itemsUpdated, 0);
+
+  // Link the chains' listings of the same product, as every collection run does.
+  await rebuildMatches(db, { retailerIds: [...retailerIds.values()] });
+  result.matches = await db.productMatch.count({
+    where: { canonicalProduct: { retailerId: { in: [...retailerIds.values()] } } },
+  });
   return result;
 }

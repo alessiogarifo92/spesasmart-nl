@@ -187,6 +187,24 @@
     "bestUnitLitre": "Best price per litre",
     "bestUnitPiece": "Best price per piece",
     "dealFrom": "{quantity, plural, one {applies from # item} other {applies from # items}}",
-    "unverifiedOffer": "Offer with unknown validity: not counted in the price."
+    "unverifiedOffer": "Offer with unknown validity: not counted in the price.",
+    "compare": "Compare",
+    "compareNamed": "Compare prices of {name}",
+    "comparisonTitle": "Price comparison",
+    "elsewhereTitle": "At other stores",
+    "alternativesTitle": "Alternatives",
+    "alternativesHint": "Another size or variant. Compare the price per kg, litre or piece.",
+    "tierSame": "Same product",
+    "tierSimilar": "Very similar",
+    "tierAlternative": "Alternative",
+    "noMatchesTitle": "Nothing to compare with yet",
+    "noMatchesBody": "No product at the other stores was found that belongs with this one with enough certainty.",
+    "matchNote": "Products are linked automatically. That can go wrong: report it when something is off.",
+    "reportMatch": "Not right?",
+    "reportMatchNamed": "Report that {name} at {retailer} is not the same product",
+    "reportPrice": "Wrong price?",
+    "reportPriceNamed": "Report that the price of {name} at {retailer} is wrong",
+    "reported": "Reported, thank you.",
+    "reportFailed": "Reporting failed. Try again later."
   }
 }

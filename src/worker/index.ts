@@ -5,6 +5,7 @@
 import "dotenv/config";
 import { Queue, Worker } from "bullmq";
 import { createRunnerDeps } from "@/ingestion/deps";
+import { rebuildMatches } from "@/ingestion/match-products";
 import { allAdapters, findAdapter } from "@/ingestion/registry";
 import { runAdapter } from "@/ingestion/runner";
 import { createIngestionProcessor } from "./process";
@@ -24,7 +25,12 @@ async function main() {
   const processor = createIngestionProcessor({
     findAdapter,
     // A fresh deps object per job: a new HTTP client re-reads robots.txt on every run.
-    run: (adapter) => runAdapter(adapter, createRunnerDeps(db, process.env)),
+    run: async (adapter) => {
+      const run = await runAdapter(adapter, createRunnerDeps(db, process.env));
+      // New listings may be the same product as one another chain already has.
+      if (run.status !== "FAILED" && run.status !== "SKIPPED") await rebuildMatches(db);
+      return run;
+    },
   });
   const worker = new Worker<IngestionJobData>(INGESTION_QUEUE, (job) => processor(job.data), {
     connection,

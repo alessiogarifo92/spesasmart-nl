@@ -1,6 +1,7 @@
 import { useFormatter, useTranslations } from "next-intl";
 import { AddToList } from "@/components/list/add-to-list";
 import { Card } from "@/components/ui/card";
+import { ChipLink } from "@/components/ui/chip";
 import { cn } from "@/lib/cn";
 import { isoToDbDate } from "@/lib/dates";
 import type { OfferView } from "@/server/offers";
@@ -39,6 +40,7 @@ export function usePromoLabel() {
  */
 export function OfferCard({ offer, listed = 0 }: { offer: OfferView; listed?: number }) {
   const t = useTranslations("offers");
+  const product = useTranslations("product");
   const common = useTranslations("common");
   const format = useFormatter();
   const money = useMoney();
@@ -134,11 +136,20 @@ export function OfferCard({ offer, listed = 0 }: { offer: OfferView; listed?: nu
         )}
         {" · "}
         {t("updated", {
-          date: format.dateTime(offer.collectedAt, { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }),
+          date: format.dateTime(offer.collectedAt, {
+            day: "numeric",
+            month: "short",
+            hour: "2-digit",
+            minute: "2-digit",
+          }),
         })}
       </p>
 
-      <AddToList productId={offer.productId} name={offer.name} quantity={listed} />
+      <AddToList productId={offer.productId} name={offer.name} quantity={listed}>
+        <ChipLink href={`/product/${offer.productId}`} aria-label={product("compareNamed", { name: offer.name })}>
+          {product("compare")}
+        </ChipLink>
+      </AddToList>
     </Card>
   );
 }

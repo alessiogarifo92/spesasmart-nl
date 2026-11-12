@@ -14,14 +14,22 @@ export function useListErrors() {
 }
 
 /** The "add to list" button on a product or an offer; `quantity` is how many are on the list already. */
-export function AddToList({ productId, name, quantity }: { productId: string; name: string; quantity: number }) {
+type Props = {
+  productId: string;
+  name: string;
+  quantity: number;
+  /** Shown next to the button, before the "on your list" mark. */
+  children?: React.ReactNode;
+};
+
+export function AddToList({ productId, name, quantity, children }: Props) {
   const t = useTranslations("list");
   const locale = useLocale();
   return (
     <ActionForm
       action={addToListAction}
       errors={useListErrors()}
-      className="flex flex-wrap items-center gap-x-3 gap-y-1"
+      className="flex flex-wrap items-center gap-x-2 gap-y-1"
     >
       <input type="hidden" name="productId" value={productId} />
       <input type="hidden" name="locale" value={locale} />
@@ -33,6 +41,7 @@ export function AddToList({ productId, name, quantity }: { productId: string; na
         <PlusIcon size={16} />
         {t("addToList")}
       </button>
+      {children}
       {quantity > 0 && (
         <span className="text-label font-semibold text-accent" data-testid="on-list">
           {t("onList", { quantity })}
