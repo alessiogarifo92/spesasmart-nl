@@ -18,6 +18,13 @@ test.describe("data sources page", () => {
     await expect(page).toHaveURL(/\/more$/);
   });
 
+  test("is rendered on every request, not frozen at build time", async ({ request }) => {
+    // A statically built copy would keep showing the chains' state of the build day.
+    const response = await request.get("/more/sources");
+    expect(response.headers()["cache-control"]).toContain("no-store");
+    expect(response.headers()["x-nextjs-cache"]).toBeUndefined();
+  });
+
   test("is translated", async ({ page }) => {
     await page.goto("/it/more/sources");
     await expect(page.getByRole("heading", { level: 1 })).toHaveText("Fonti dati e correttezza");

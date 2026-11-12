@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { connection } from "next/server";
 import { getFormatter, getTranslations, setRequestLocale } from "next-intl/server";
 import { PageHeader } from "@/components/shell/page-header";
 import { Card } from "@/components/ui/card";
@@ -39,6 +40,8 @@ export default async function SourcesPage({ params }: Props) {
   setRequestLocale(locale);
   const t = await getTranslations("sources");
   const format = await getFormatter();
+  // Read on every request: without this the build would freeze each chain's state into a static page.
+  await connection();
   const chains = await chainSources(db, new Date());
 
   return (
