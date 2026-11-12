@@ -62,7 +62,8 @@ function toRaw(offer: DemoOffer, style: MockStyle, ctx: AdapterContext): RawOffe
       // A plain price cut shows only the two prices; its label is a badge, not a mechanic.
       promotion: priceCut ? "" : (offer.promoDescription ?? ""),
       badge: priceCut ? (offer.promoDescription ?? null) : null,
-      validity: validity === "" || validity === "alleen vandaag" ? validity : `${style.validityPrefix ?? ""}${validity}`,
+      validity:
+        validity === "" || validity === "alleen vandaag" ? validity : `${style.validityPrefix ?? ""}${validity}`,
       conditions: offer.conditions ?? null,
       kind: offer.kind ?? "WEEKLY",
     },

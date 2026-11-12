@@ -33,13 +33,17 @@ describe("adapterSwitch", () => {
   const real = adapter("jumbo", false);
 
   it("always runs a mock adapter", () => {
-    expect(adapterSwitch({ adapter: adapter("mock:jumbo", true), enabledAdapters: [], retailerAdapterEnabled: false })).toEqual({
+    expect(
+      adapterSwitch({ adapter: adapter("mock:jumbo", true), enabledAdapters: [], retailerAdapterEnabled: false }),
+    ).toEqual({
       run: true,
     });
   });
 
   it("runs a real adapter only when both switches are on", () => {
-    expect(adapterSwitch({ adapter: real, enabledAdapters: ["jumbo"], retailerAdapterEnabled: true })).toEqual({ run: true });
+    expect(adapterSwitch({ adapter: real, enabledAdapters: ["jumbo"], retailerAdapterEnabled: true })).toEqual({
+      run: true,
+    });
   });
 
   it("stops a real adapter missing from the environment list", () => {

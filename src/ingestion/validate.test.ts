@@ -30,7 +30,8 @@ function offer(overrides: Partial<NormalizedOffer> = {}): NormalizedOffer {
   };
 }
 
-const withProduct = (product: Partial<NormalizedOffer["product"]>) => offer({ product: { ...offer().product, ...product } });
+const withProduct = (product: Partial<NormalizedOffer["product"]>) =>
+  offer({ product: { ...offer().product, ...product } });
 
 describe("validateOffer", () => {
   it("verifies a complete offer with full confidence", () => {
@@ -38,8 +39,13 @@ describe("validateOffer", () => {
   });
 
   it("verifies an offer that starts later or ends today", () => {
-    expect(validateOffer(offer({ validity: { start: "2026-11-16", end: "2026-11-22", approximate: false } }), { today }).status).toBe("VERIFIED");
-    expect(validateOffer(offer({ validity: { start: today, end: today, approximate: false } }), { today }).status).toBe("VERIFIED");
+    expect(
+      validateOffer(offer({ validity: { start: "2026-11-16", end: "2026-11-22", approximate: false } }), { today })
+        .status,
+    ).toBe("VERIFIED");
+    expect(validateOffer(offer({ validity: { start: today, end: today, approximate: false } }), { today }).status).toBe(
+      "VERIFIED",
+    );
   });
 
   describe("rejects", () => {
@@ -48,7 +54,11 @@ describe("validateOffer", () => {
       ["an empty title", offer({ title: "" }), "title-empty"],
       ["a zero price", offer({ currentPriceCents: 0 }), "price-out-of-range"],
       ["a negative regular price", offer({ regularPriceCents: -10 }), "price-out-of-range"],
-      ["a price above 1000 euros", offer({ currentPriceCents: 100_001, regularPriceCents: 120_000 }), "price-out-of-range"],
+      [
+        "a price above 1000 euros",
+        offer({ currentPriceCents: 100_001, regularPriceCents: 120_000 }),
+        "price-out-of-range",
+      ],
       [
         "a zero deal total",
         offer({ promotion: { type: "X_FOR_PRICE", quantity: 2, totalCents: 0 }, currentPriceCents: null }),
@@ -66,7 +76,9 @@ describe("validateOffer", () => {
     });
 
     it("accepts the price boundary of 1000 euros", () => {
-      expect(validateOffer(offer({ currentPriceCents: 100_000, regularPriceCents: 100_000 }), { today }).status).not.toBe("REJECTED");
+      expect(
+        validateOffer(offer({ currentPriceCents: 100_000, regularPriceCents: 100_000 }), { today }).status,
+      ).not.toBe("REJECTED");
     });
   });
 
@@ -77,7 +89,10 @@ describe("validateOffer", () => {
     });
 
     it("a validity read from a week number", () => {
-      const verdict = validateOffer(offer({ validity: { start: "2026-11-09", end: "2026-11-15", approximate: true } }), { today });
+      const verdict = validateOffer(
+        offer({ validity: { start: "2026-11-09", end: "2026-11-15", approximate: true } }),
+        { today },
+      );
       expect(verdict).toEqual({ status: "UNVERIFIED", confidence: 0.8, issues: ["validity-approximate"] });
     });
 
@@ -88,7 +103,11 @@ describe("validateOffer", () => {
 
     it("an offer whose price cannot be computed", () => {
       const verdict = validateOffer(
-        offer({ promotion: { type: "X_PLUS_Y_FREE", buy: 1, free: 1 }, currentPriceCents: null, regularPriceCents: null }),
+        offer({
+          promotion: { type: "X_PLUS_Y_FREE", buy: 1, free: 1 },
+          currentPriceCents: null,
+          regularPriceCents: null,
+        }),
         { today },
       );
       expect(verdict.status).toBe("UNVERIFIED");
@@ -143,7 +162,12 @@ describe("validateOffer", () => {
       const verdict = validateOffer(worst, { today });
       expect(verdict.status).toBe("UNVERIFIED");
       expect(verdict.confidence).toBe(0.05);
-      expect(verdict.issues).toEqual(["validity-unknown", "promotion-unknown", "quantity-unknown", "regular-below-offer"]);
+      expect(verdict.issues).toEqual([
+        "validity-unknown",
+        "promotion-unknown",
+        "quantity-unknown",
+        "regular-below-offer",
+      ]);
     });
   });
 });

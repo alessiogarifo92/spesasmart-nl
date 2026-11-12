@@ -20,7 +20,8 @@ async function collect(adapter: (typeof MOCK_ADAPTERS)[number], ctx: AdapterCont
 function normalizeAll(adapter: (typeof MOCK_ADAPTERS)[number], raws: RawOffer[], ctx: AdapterContext) {
   return raws.map((raw) => {
     const result = adapter.normalizeOffer(raw, ctx);
-    if (!result.ok) throw new Error(`${adapter.id} could not normalise ${JSON.stringify(raw.payload)}: ${result.reason}`);
+    if (!result.ok)
+      throw new Error(`${adapter.id} could not normalise ${JSON.stringify(raw.payload)}: ${result.reason}`);
     return result.value;
   });
 }
@@ -141,7 +142,11 @@ describe("mock adapters", () => {
       regularPrice: "2,19",
       promotion: "1+1 gratis",
     });
-    expect(await find(mockAh, "ah-cola-25")).toMatchObject({ size: "6 x 330 ml", price: "2,99", promotion: "25% korting" });
+    expect(await find(mockAh, "ah-cola-25")).toMatchObject({
+      size: "6 x 330 ml",
+      price: "2,99",
+      promotion: "25% korting",
+    });
     expect(await find(mockVomar, "vomar-bananen-dag")).toMatchObject({
       price: "99",
       regularPrice: "159",

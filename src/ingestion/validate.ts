@@ -78,7 +78,10 @@ export function validateOffer(offer: NormalizedOffer, context: { today: IsoDate 
     flag("regular-price-unknown", PENALTY.regularPriceUnknown, false);
   } else if (offerPrice !== null && offer.regularPriceCents < offerPrice) {
     flag("regular-below-offer", PENALTY.regularBelowOffer, true);
-  } else if (offerPrice !== null && (discountPercent(offer.regularPriceCents, offerPrice) ?? 0) > IMPLAUSIBLE_DISCOUNT_PERCENT) {
+  } else if (
+    offerPrice !== null &&
+    (discountPercent(offer.regularPriceCents, offerPrice) ?? 0) > IMPLAUSIBLE_DISCOUNT_PERCENT
+  ) {
     flag("discount-implausible", PENALTY.discountImplausible, false);
   }
 

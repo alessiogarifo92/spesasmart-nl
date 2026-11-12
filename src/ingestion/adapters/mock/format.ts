@@ -38,7 +38,11 @@ function datePart(date: IsoDate, withMonth: boolean): string {
  * "wo 11 t/m di 17 nov", "vr 27 nov t/m do 3 dec", "t/m di 17 nov", "alleen vandaag",
  * or "" when the validity is unknown. Offsets are days from `today`.
  */
-export function formatValidity(input: { today: IsoDate; fromOffset: number | null; untilOffset: number | null }): string {
+export function formatValidity(input: {
+  today: IsoDate;
+  fromOffset: number | null;
+  untilOffset: number | null;
+}): string {
   const { today, fromOffset, untilOffset } = input;
   if (untilOffset === null) return "";
   if (fromOffset === 0 && untilOffset === 0) return "alleen vandaag";

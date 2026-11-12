@@ -44,6 +44,29 @@ A real adapter starts at most `maxRunsPerDay` runs per Europe/Amsterdam day (1 u
 
 `mock:ah`, `mock:jumbo`, `mock:vomar` and `mock:dirk` (`src/ingestion/adapters/mock`) make no requests. They render the demo catalogue as the text a chain would print ("2e halve prijs", "t/m zondag") and send it through the same pipeline, so the parsers and the validation are exercised by the seed. Every row they write carries `isDemo`.
 
+## Real adapters
+
+Off by default. Each one runs only with its id in `INGESTION_ENABLED_ADAPTERS` and the chain's "Echte adapter" switch on in `/admin`. No live run has been made from the development container (retailer hosts are not reachable there): the parsers are tested against reduced copies of the real pages in `src/ingestion/adapters/<chain>/fixtures/`, captured once, without images. **Check the first live run by hand** (`npm run ingest -- <id>`, then the run and its errors in `/admin`).
+
+A real adapter writes next to that chain's demo rows; it does not replace them. Rows from a real adapter are not marked `isDemo`.
+
+### Jumbo (`jumbo`)
+
+| | |
+|---|---|
+| Page | `https://www.jumbo.com/aanbiedingen/nu`, one request per run, one run a day |
+| robots.txt (2026-11-12) | does not restrict `/aanbiedingen`; the fixture copy is checked in a test |
+| Read per offer | title, mechanic tag ("1+1 gratis", "voor 0,99", "2 voor 4,99", "25% korting"), where it applies ("Alleen online"), validity dates, link |
+| Not on the page | regular price, brand, package size, barcode, next week's offers |
+
+Consequences:
+
+- An offer is a range ("Alle Jumbo wokgroenten"), not one package. It is stored as a listing without size or brand, so it does not link to other chains' products and the route planner cannot use it as a substitute.
+- Only "voor X" and "N voor X" give a price. Offers with "1+1 gratis" or "25% korting" are stored with their mechanic, no price, lower confidence, and shown as "Te controleren". A price per weight ("1,59 per 100 gram") is kept as text.
+- The server-rendered page holds the cards of four categories (46 offers on the capture day); the page's embedded data listed 139. The rest loads in the browser and is not collected.
+- Validity comes from each card's own dates; cards without them fall back to their validity line.
+- A page that answers but shows no cards fails the run, so a changed layout is noticed.
+
 ## Commands
 
 | Command | What it does |
@@ -54,4 +77,4 @@ A real adapter starts at most `maxRunsPerDay` runs per Europe/Amsterdam day (1 u
 
 ## Adding an adapter
 
-Implement `RetailerAdapter`, develop the parser against a reduced fixture captured once (no test makes a real request), add it to `allAdapters()` in `src/ingestion/registry.ts`, and keep its switch off until a run has been checked by hand.
+Implement `RetailerAdapter`, develop the parser against a reduced fixture captured once (no test makes a real request), add it to `REAL_ADAPTERS` in `src/ingestion/registry.ts`, describe it under "Real adapters", and keep its switch off until a run has been checked by hand.

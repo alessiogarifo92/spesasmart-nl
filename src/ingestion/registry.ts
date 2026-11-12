@@ -1,9 +1,16 @@
 import type { RetailerAdapter } from "./adapter";
+import { jumboAdapter } from "./adapters/jumbo";
 import { MOCK_ADAPTERS } from "./adapters/mock";
 
-/** Every adapter the worker schedules. Real adapters are added by their own tickets. */
+/**
+ * Adapters that make real requests. Each one runs only when its id is listed in
+ * INGESTION_ENABLED_ADAPTERS and its chain has `adapterEnabled` switched on.
+ */
+export const REAL_ADAPTERS: readonly RetailerAdapter[] = [jumboAdapter];
+
+/** Every adapter the worker schedules. */
 export function allAdapters(): RetailerAdapter[] {
-  return [...MOCK_ADAPTERS];
+  return [...MOCK_ADAPTERS, ...REAL_ADAPTERS];
 }
 
 export function findAdapter(id: string): RetailerAdapter | undefined {
@@ -15,7 +22,9 @@ export function selectAdapters(selection: string): RetailerAdapter[] {
   if (selection === "all") return allAdapters();
   const adapter = findAdapter(selection);
   if (!adapter) {
-    const known = allAdapters().map((candidate) => candidate.id).join(", ");
+    const known = allAdapters()
+      .map((candidate) => candidate.id)
+      .join(", ");
     throw new Error(`Unknown adapter "${selection}"; known: ${known}`);
   }
   return [adapter];

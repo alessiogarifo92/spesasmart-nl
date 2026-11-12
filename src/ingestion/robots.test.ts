@@ -20,25 +20,13 @@ describe("parseRobots / isAllowed", () => {
   });
 
   it("prefers the group naming the token over *", () => {
-    const text = [
-      "User-agent: *",
-      "Disallow: /",
-      "",
-      "User-agent: spesasmartnl",
-      "Disallow: /zoeken",
-    ].join("\n");
+    const text = ["User-agent: *", "Disallow: /", "", "User-agent: spesasmartnl", "Disallow: /zoeken"].join("\n");
     expect(allowed(text, "/aanbiedingen")).toBe(true);
     expect(allowed(text, "/zoeken?q=melk")).toBe(false);
   });
 
   it("picks the most specific matching user-agent token", () => {
-    const text = [
-      "User-agent: Spesa",
-      "Disallow: /",
-      "",
-      "User-agent: SpesaSmartNL",
-      "Allow: /",
-    ].join("\n");
+    const text = ["User-agent: Spesa", "Disallow: /", "", "User-agent: SpesaSmartNL", "Allow: /"].join("\n");
     expect(allowed(text, "/aanbiedingen")).toBe(true);
     expect(allowed(text, "/aanbiedingen", "SpesaBot")).toBe(false);
   });

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { allAdapters } from "@/ingestion/registry";
+import { MOCK_ADAPTERS } from "@/ingestion/adapters/mock";
 import { INGESTION_QUEUE, registerSchedules, scheduleAt, type SchedulerQueue } from "./schedule";
 
 function fakeQueue() {
@@ -16,21 +16,37 @@ function fakeQueue() {
 describe("registerSchedules", () => {
   it("upserts one daily job per adapter from 05:15 Amsterdam, ten minutes apart", async () => {
     const { queue, calls } = fakeQueue();
-    await registerSchedules(queue, allAdapters());
+    await registerSchedules(queue, [...MOCK_ADAPTERS]);
 
     expect(INGESTION_QUEUE).toBe("ingestion");
     expect(calls).toEqual([
-      ["ingest:mock:ah", { pattern: "15 5 * * *", tz: "Europe/Amsterdam" }, { name: "ingest", data: { adapterId: "mock:ah" } }],
-      ["ingest:mock:jumbo", { pattern: "25 5 * * *", tz: "Europe/Amsterdam" }, { name: "ingest", data: { adapterId: "mock:jumbo" } }],
-      ["ingest:mock:vomar", { pattern: "35 5 * * *", tz: "Europe/Amsterdam" }, { name: "ingest", data: { adapterId: "mock:vomar" } }],
-      ["ingest:mock:dirk", { pattern: "45 5 * * *", tz: "Europe/Amsterdam" }, { name: "ingest", data: { adapterId: "mock:dirk" } }],
+      [
+        "ingest:mock:ah",
+        { pattern: "15 5 * * *", tz: "Europe/Amsterdam" },
+        { name: "ingest", data: { adapterId: "mock:ah" } },
+      ],
+      [
+        "ingest:mock:jumbo",
+        { pattern: "25 5 * * *", tz: "Europe/Amsterdam" },
+        { name: "ingest", data: { adapterId: "mock:jumbo" } },
+      ],
+      [
+        "ingest:mock:vomar",
+        { pattern: "35 5 * * *", tz: "Europe/Amsterdam" },
+        { name: "ingest", data: { adapterId: "mock:vomar" } },
+      ],
+      [
+        "ingest:mock:dirk",
+        { pattern: "45 5 * * *", tz: "Europe/Amsterdam" },
+        { name: "ingest", data: { adapterId: "mock:dirk" } },
+      ],
     ]);
   });
 
   it("is idempotent: registering again upserts the same scheduler ids", async () => {
     const { queue, calls } = fakeQueue();
-    await registerSchedules(queue, allAdapters());
-    await registerSchedules(queue, allAdapters());
+    await registerSchedules(queue, [...MOCK_ADAPTERS]);
+    await registerSchedules(queue, [...MOCK_ADAPTERS]);
     const ids = calls.map(([id]) => id);
     expect(new Set(ids).size).toBe(4);
   });
