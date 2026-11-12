@@ -67,6 +67,21 @@ Consequences:
 - Validity comes from each card's own dates; cards without them fall back to their validity line.
 - A page that answers but shows no cards fails the run, so a changed layout is noticed.
 
+### Dirk (`dirk`)
+
+| | |
+|---|---|
+| Page | `https://www.dirk.nl/aanbiedingen`, one request per run, one run a day |
+| robots.txt (2026-11-12) | allows everything; the fixture copy is checked in a test |
+| Read per offer | product name, size line, offer price, regular price when shown, label ("ACTIE", "VR, ZA & ZO actie"), category heading, product link when the card has one |
+| Not on the page | brand as a field of its own (it is in the name), barcode, a start date, any mechanic other than a plain offer price |
+
+- **Prices** are two figures: euros and cents ("1" + "99"), or cents alone under one euro ("99" is € 0,99). Any other shape is not read as a price and the offer is stored without one.
+- **Validity** is the header's "tot en met di 17 november" for every card; the start is unknown. "VR, ZA & ZO actie" is dated on the Friday to Sunday of that week.
+- **Size** is taken only when the line is one plain size ("1 kg", "24 x 300 ml"); "Zak 250 gram of schaal 500 gram." stays unknown.
+- **No browser.** The ticket expected product names to need JavaScript. The captured page is server-rendered and carries the names, so the adapter uses the plain HTTP client like the others. This was seen on a rendered capture only: if the first live run fails with "no offer cards with a title found", the names do need a browser after all and the adapter has to be extended.
+- Next week's offers load on a button and are not collected. The capture had 106 cards.
+
 ## Commands
 
 | Command | What it does |
