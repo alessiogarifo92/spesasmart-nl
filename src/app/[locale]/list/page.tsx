@@ -110,6 +110,8 @@ export default async function ListPage({ params }: Props) {
         <ListItems items={items} retailers={retailers} />
       )}
 
+      {items.length > checked && <ButtonLink href="/plan">{t("toPlan")}</ButtonLink>}
+
       {list && checked > 0 && (
         <form action={uncheckAllAction}>
           <input type="hidden" name="listId" value={list.id} />

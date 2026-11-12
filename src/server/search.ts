@@ -1,6 +1,13 @@
 import { Prisma, type PrismaClient } from "@/generated/prisma/client";
 import type { IsoDate } from "@/domain/pricing";
-import { fuzzyThreshold, isEmptyQuery, likePattern, markBest, type ParsedQuery, type SearchContext } from "@/domain/search";
+import {
+  fuzzyThreshold,
+  isEmptyQuery,
+  likePattern,
+  markBest,
+  type ParsedQuery,
+  type SearchContext,
+} from "@/domain/search";
 import { loadProducts, type CatalogProduct } from "./catalog";
 
 export type SearchHit = {
@@ -25,7 +32,7 @@ export const SEARCH_PAGE_SIZE = 40;
 /** Matches loaded and compared; more than this and the query is too broad to compare usefully. */
 const MATCH_CAP = 200;
 /** Score from which a match counts as clear rather than loose. */
-const CLEAR_MATCH = 0.55;
+export const CLEAR_MATCH = 0.55;
 
 /** Brand and category names the query parser recognises, read from the catalogue. */
 export async function searchContext(db: PrismaClient): Promise<SearchContext> {
@@ -78,7 +85,10 @@ export async function searchProducts(
 
   const score =
     terms.length > 0
-      ? Prisma.sql`(${Prisma.join(terms.map((term) => term.score), " + ")}) / ${terms.length}::float8`
+      ? Prisma.sql`(${Prisma.join(
+          terms.map((term) => term.score),
+          " + ",
+        )}) / ${terms.length}::float8`
       : Prisma.sql`1`;
 
   const matches = await db.$queryRaw<{ id: string; score: number }[]>(Prisma.sql`
@@ -91,7 +101,11 @@ export async function searchProducts(
     LIMIT ${MATCH_CAP}
   `);
 
-  const products = await loadProducts(db, matches.map((match) => match.id), today);
+  const products = await loadProducts(
+    db,
+    matches.map((match) => match.id),
+    today,
+  );
   const asked = query.quantity;
   const found = matches.flatMap((match) => {
     const product = products.get(match.id);

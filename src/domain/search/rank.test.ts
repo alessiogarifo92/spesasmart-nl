@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { fuzzyThreshold, likePattern, markBest } from "./rank";
+import { fuzzyThreshold, likePattern, nameHasWords, markBest } from "./rank";
 
 describe("fuzzyThreshold", () => {
   it("does not compare short words or numbers fuzzily", () => {
@@ -14,6 +14,30 @@ describe("fuzzyThreshold", () => {
     expect(fuzzyThreshold("appel")).toBe(0.65);
     expect(fuzzyThreshold("yogurt")).toBe(0.45);
     expect(fuzzyThreshold("spagetti")).toBe(0.45);
+  });
+});
+
+describe("nameHasWords", () => {
+  it.each([
+    ["halfvolle melk 1 l", ["melk"]],
+    ["halfvolle melk 1 l", ["melk", "halfvolle"]],
+    ["elstar appels 1 kg", ["appel"]],
+    ["elstar appel", ["appels"]],
+    ["bananen 1 kg", ["bananen"]],
+    ["kipfilet 500 g", []],
+  ])("%j has the words %j", (name, terms) => {
+    expect(nameHasWords(name, terms)).toBe(true);
+  });
+
+  it.each([
+    ["melkchocolade 100 g", ["melk"]],
+    ["chocolademelk 1 l", ["melk"]],
+    ["halfvolle melk 1 l", ["melk", "volle"]],
+    ["tomatensaus", ["tomaat"]],
+    ["", ["melk"]],
+    ["melk", [""]],
+  ])("%j does not have the words %j", (name, terms) => {
+    expect(nameHasWords(name, terms)).toBe(false);
   });
 });
 
@@ -44,7 +68,12 @@ describe("markBest", () => {
   });
 
   it("marks every result in a tie", () => {
-    expect(markBest([{ priceCents: 99, unitPrice: litre(99) }, { priceCents: 99, unitPrice: litre(99) }])).toEqual([
+    expect(
+      markBest([
+        { priceCents: 99, unitPrice: litre(99) },
+        { priceCents: 99, unitPrice: litre(99) },
+      ]),
+    ).toEqual([
       { lowestPrice: true, bestUnitPrice: true },
       { lowestPrice: true, bestUnitPrice: true },
     ]);
@@ -52,8 +81,15 @@ describe("markBest", () => {
 
   it("marks nothing when there is nothing to compare with", () => {
     expect(markBest([])).toEqual([]);
-    expect(markBest([{ priceCents: 99, unitPrice: litre(99) }])).toEqual([{ lowestPrice: false, bestUnitPrice: false }]);
-    expect(markBest([{ priceCents: 99, unitPrice: null }, { priceCents: null, unitPrice: null }])).toEqual([
+    expect(markBest([{ priceCents: 99, unitPrice: litre(99) }])).toEqual([
+      { lowestPrice: false, bestUnitPrice: false },
+    ]);
+    expect(
+      markBest([
+        { priceCents: 99, unitPrice: null },
+        { priceCents: null, unitPrice: null },
+      ]),
+    ).toEqual([
       { lowestPrice: false, bestUnitPrice: false },
       { lowestPrice: false, bestUnitPrice: false },
     ]);

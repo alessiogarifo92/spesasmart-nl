@@ -32,13 +32,13 @@ flowchart LR
 | `src/domain/offers` | What the interface derives from a stored offer: state today, labelled estimates, URL filters. Pure functions. | `src/domain` |
 | `src/domain/search` | Name normalisation, query parsing (size, barcode, brand, category, flags), Dutch/Italian/English synonyms, fuzzy-match thresholds, lowest-price marks. Pure functions. | `src/domain` |
 | `src/domain/matching` | Product matching and classification. Pure functions. | `src/domain` |
-| `src/domain/optimizer` | Basket optimisation. Pure functions. | `src/domain` |
+| `src/domain/optimizer` | Basket optimisation: pricing a line, choosing 1 to 3 chains, reason codes, the plan settings read from the address and the notes behind "why this route?". Pure functions. | `src/domain` |
 | `src/ingestion` | Adapter contract, HTTP client, robots check, validation, runner, adapters; `match-products.ts` rebuilds the links between the chains' listings after a run. | `src/domain`, `src/lib` |
 | `src/worker` | BullMQ entry point and schedules. | `src/ingestion`, `src/lib` |
 | `src/lib` | Database client and other shared infrastructure. | `src/generated` |
-| `src/server` | Database queries used by pages and route handlers; the Server Functions behind forms (`list-actions.ts`, `feedback-actions.ts`), each validating its own input; the device cookie. `catalog.ts` prices a listing today, `search.ts` and `comparison.ts` build on it. | `src/domain`, `src/lib` |
+| `src/server` | Database queries used by pages and route handlers; the Server Functions behind forms (`list-actions.ts`, `feedback-actions.ts`), each validating its own input; the device cookie. `catalog.ts` prices a listing today; `search.ts`, `comparison.ts` and `plan.ts` (the route for the device's list) build on it. | `src/domain`, `src/lib` |
 | `src/app` | Pages, layouts, route handlers. | everything above except `src/worker` |
-| `src/components` | React components: `shell` (layout, navigation), `ui` (primitives from `DESIGN.md`), `offers`, `products`, `list`, `settings`. | `src/domain` types, `src/i18n`, `src/lib` |
+| `src/components` | React components: `shell` (layout, navigation), `ui` (primitives from `DESIGN.md`), `offers`, `products`, `list`, `plan`, `settings`. | `src/domain` types, `src/i18n`, `src/lib` |
 | `src/i18n`, `messages/` | Routing, request config, translations. | — |
 | `prisma/` | Schema, migrations, seed. | — |
 | `tests/integration` | Tests that need the database. | — |

@@ -43,9 +43,18 @@ export type ListItem = {
 
 export type Mode = "max-savings" | "fewest-stores" | "offers-only" | "organic-only";
 
+/**
+ * Which candidates compete on price with the product the shopper picked. "exact": none,
+ * the pick wins wherever a chosen chain sells it. "same": the same product at another chain.
+ * "similar": also a very similar one (same size, another or no brand).
+ */
+export type Substitutes = "exact" | "same" | "similar";
+
 export type Options = {
   maxStores: 1 | 2 | 3;
   mode: Mode;
+  /** Defaults to "exact". */
+  substitutes?: Substitutes;
   /** Budget in cents; null or absent for none. */
   budgetCents?: number | null;
 };
@@ -77,9 +86,9 @@ export type LineReason =
   | { code: "only-store" }
   /** Chosen with an offer; saving against its own regular total, null when that is unknown. */
   | { code: "offer"; savingCents: number | null; daysLeft: number | null }
-  /** Compared with the next-best chain in the chosen set at the same tier; nulls when there is none. */
+  /** Compared with the next-best chain in the chosen set among candidates that compete on price; nulls when there is none. */
   | { code: "cheapest"; nextRetailerId: RetailerId | null; differenceCents: number | null }
-  /** Chosen for its tier over a cheaper, less similar candidate in the chosen set. */
+  /** Chosen for its tier over a cheaper, less similar candidate in the chosen set that does not compete on price. */
   | { code: "closest-match" };
 
 export type PlanLine = {

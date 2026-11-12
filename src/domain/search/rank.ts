@@ -16,6 +16,24 @@ export function likePattern(term: string): string {
   return `%${term.replace(/[\\%_]/g, "\\$&")}%`;
 }
 
+/** Longest ending two forms of one word may differ by ("appel", "appels"; "tomaat" is not "tomaten"). */
+const INFLECTION_LENGTH = 2;
+
+/**
+ * True when every term is a word of the name, give or take an ending ("appel" in
+ * "Elstar appels"), rather than a part of a longer word ("melk" in "melkchocolade").
+ * Both sides are expected normalised. No terms means nothing to object to.
+ */
+export function nameHasWords(normalizedName: string, terms: string[]): boolean {
+  const words = normalizedName.split(" ").filter(Boolean);
+  return terms.every((term) =>
+    words.some((word) => {
+      const [short, long] = word.length <= term.length ? [word, term] : [term, word];
+      return short.length > 0 && long.startsWith(short) && long.length - short.length <= INFLECTION_LENGTH;
+    }),
+  );
+}
+
 export type Priced = {
   /** Price of one item in cents; null when unknown. */
   priceCents: number | null;

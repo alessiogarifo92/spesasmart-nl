@@ -52,7 +52,11 @@ function organic(retailerId: string, regularPriceCents: number): Candidate {
   return candidate(retailerId, regularPriceCents, { isOrganic: true, productId: `${retailerId}-bio` });
 }
 
-function item(id: string, candidates: Candidate[], extras: Partial<Omit<ListItem, "id" | "candidates">> = {}): ListItem {
+function item(
+  id: string,
+  candidates: Candidate[],
+  extras: Partial<Omit<ListItem, "id" | "candidates">> = {},
+): ListItem {
   return { id, label: id, quantity: 1, pinnedRetailerId: null, candidates, ...extras };
 }
 
@@ -384,19 +388,19 @@ describe("optimizeBasket: modes", () => {
   });
 
   it("fewest-stores still puts coverage first", () => {
-    const plan = optimizeBasket(
-      [item("melk", [candidate("ah", 500)]), item("kaas", [candidate("jumbo", 500)])],
-      { maxStores: 2, mode: "fewest-stores" },
-    );
+    const plan = optimizeBasket([item("melk", [candidate("ah", 500)]), item("kaas", [candidate("jumbo", 500)])], {
+      maxStores: 2,
+      mode: "fewest-stores",
+    });
     expect(plan.coveredCount).toBe(2);
     expect(plan.stops).toHaveLength(2);
   });
 
   it("fewest-stores breaks a tie in store count on the total", () => {
-    const plan = optimizeBasket(
-      [item("melk", [candidate("ah", 500), candidate("jumbo", 400)])],
-      { maxStores: 2, mode: "fewest-stores" },
-    );
+    const plan = optimizeBasket([item("melk", [candidate("ah", 500), candidate("jumbo", 400)])], {
+      maxStores: 2,
+      mode: "fewest-stores",
+    });
     expect(placement(plan)).toEqual({ melk: "jumbo" });
   });
 
@@ -429,10 +433,10 @@ describe("optimizeBasket: modes", () => {
   });
 
   it("reports a pinned item emptied by the filter as filtered", () => {
-    const plan = optimizeBasket(
-      [item("melk", [candidate("ah", 100)], { pinnedRetailerId: "ah" })],
-      { maxStores: 1, mode: "organic-only" },
-    );
+    const plan = optimizeBasket([item("melk", [candidate("ah", 100)], { pinnedRetailerId: "ah" })], {
+      maxStores: 1,
+      mode: "organic-only",
+    });
     expect(missingReasons(plan)).toEqual({ melk: "filtered" });
   });
 
@@ -541,7 +545,79 @@ describe("optimizeBasket: edge cases", () => {
     ["a fractional budget", () => optimizeBasket([], { ...MAX_SAVINGS_1, budgetCents: 10.5 })],
     ["maxStores 4", () => optimizeBasket([], { maxStores: 4, mode: "max-savings" } as unknown as Options)],
     ["an unknown mode", () => optimizeBasket([], { maxStores: 1, mode: "cheapest" } as unknown as Options)],
+    [
+      "an unknown substitutes setting",
+      () => optimizeBasket([], { ...MAX_SAVINGS_1, substitutes: "any" } as unknown as Options),
+    ],
   ])("throws RangeError for %s", (_label, call) => {
     expect(call).toThrow(RangeError);
+  });
+});
+
+describe("optimizeBasket: substitutes", () => {
+  // One item pinned at each chain, so all three are always visited and only the
+  // choice inside the set is under test.
+  const anchors = (...chains: string[]) =>
+    chains.map((chain) => item(`anchor-${chain}`, [tiered(chain, 100, "EXACT")], { pinnedRetailerId: chain }));
+  // The shopper picked the product at AH; Vomar sells the same one, Dirk a very similar one.
+  const milk = () =>
+    item("milk", [tiered("ah", 119, "EXACT"), tiered("vomar", 109, "SAME"), tiered("dirk", 99, "SIMILAR")]);
+  const basket = () => [milk(), ...anchors("ah", "vomar", "dirk")];
+
+  it("keeps the picked product by default, whatever the others in the set cost", () => {
+    const plan = optimizeBasket(basket(), MAX_SAVINGS_3);
+    expect(placement(plan).milk).toBe("ah");
+    expect(line(plan, "milk").reason).toEqual({ code: "closest-match" });
+  });
+
+  it("lets the same product at another chain compete on price", () => {
+    const plan = optimizeBasket(basket(), { ...MAX_SAVINGS_3, substitutes: "same" });
+    expect(placement(plan).milk).toBe("vomar");
+    // Dirk is cheaper still, but a similar product does not compete under "same".
+    expect(line(plan, "milk").reason).toEqual({ code: "closest-match" });
+  });
+
+  it("lets a very similar product compete on price too, and names the next-best chain", () => {
+    const plan = optimizeBasket(basket(), { ...MAX_SAVINGS_3, substitutes: "similar" });
+    expect(placement(plan).milk).toBe("dirk");
+    expect(line(plan, "milk").reason).toEqual({ code: "cheapest", nextRetailerId: "vomar", differenceCents: 10 });
+    expect(plan.totalCents).toBe(399);
+  });
+
+  it("never lets another size compete on price", () => {
+    const items = [
+      item("milk", [tiered("ah", 119, "EXACT"), tiered("dirk", 49, "ALTERNATIVE")]),
+      ...anchors("ah", "dirk"),
+    ];
+    const plan = optimizeBasket(items, { ...MAX_SAVINGS_2, substitutes: "similar" });
+    expect(placement(plan).milk).toBe("ah");
+    expect(line(plan, "milk").reason).toEqual({ code: "closest-match" });
+  });
+
+  it("prefers the closer match at the same price", () => {
+    const items = [item("milk", [tiered("dirk", 99, "SIMILAR"), tiered("ah", 99, "EXACT")]), ...anchors("ah", "dirk")];
+    const plan = optimizeBasket(items, { ...MAX_SAVINGS_2, substitutes: "similar" });
+    expect(placement(plan).milk).toBe("ah");
+  });
+
+  it("falls back to another size when the chosen chains have nothing closer", () => {
+    const plan = optimizeBasket(
+      [item("milk", [tiered("jumbo", 49, "ALTERNATIVE")]), item("bread", [tiered("jumbo", 150, "EXACT")])],
+      { ...MAX_SAVINGS_1, substitutes: "similar" },
+    );
+    expect(placement(plan)).toEqual({ milk: "jumbo", bread: "jumbo" });
+  });
+
+  it("applies the setting to every chain on its own", () => {
+    const items = () => [
+      item("milk", [
+        candidate("dirk", 120, { tier: "EXACT", productId: "dirk-brand" }),
+        candidate("dirk", 99, { tier: "SIMILAR", productId: "dirk-own" }),
+      ]),
+    ];
+    expect(optimizeBasket(items(), MAX_SAVINGS_1).singleStores[0].totalCents).toBe(120);
+    const plan = optimizeBasket(items(), { ...MAX_SAVINGS_1, substitutes: "similar" });
+    expect(plan.singleStores[0].totalCents).toBe(99);
+    expect(line(plan, "milk").candidate.productId).toBe("dirk-own");
   });
 });

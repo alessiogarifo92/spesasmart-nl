@@ -15,9 +15,17 @@ import type {
   RetailerId,
   SingleStore,
   Stop,
+  Substitutes,
 } from "./types";
 
 const TIER_RANK: Record<MatchTier, number> = { EXACT: 0, SAME: 1, SIMILAR: 2, ALTERNATIVE: 3 };
+const SUBSTITUTES: readonly Substitutes[] = ["exact", "same", "similar"];
+/** Tiers that count as the picked product itself, per setting: they share rank 0 and compete on price. */
+const PRICE_EQUAL: Record<Substitutes, readonly MatchTier[]> = {
+  exact: ["EXACT"],
+  same: ["EXACT", "SAME"],
+  similar: ["EXACT", "SAME", "SIMILAR"],
+};
 const MODES: readonly Mode[] = ["max-savings", "fewest-stores", "offers-only", "organic-only"];
 const MAX_STORES: readonly number[] = [1, 2, 3];
 
@@ -39,10 +47,20 @@ function compareText(a: string, b: string): number {
   return a < b ? -1 : a > b ? 1 : 0;
 }
 
-function compareOptions(a: Option, b: Option): number {
+/** Rank of a tier under a substitutes setting: 0 for everything that competes on price with the pick. */
+type Rank = (tier: MatchTier) => number;
+
+function rankFor(substitutes: Substitutes): Rank {
+  const equal = PRICE_EQUAL[substitutes];
+  return (tier) => (equal.includes(tier) ? 0 : TIER_RANK[tier]);
+}
+
+function compareOptions(a: Option, b: Option, rank: Rank): number {
   return (
-    TIER_RANK[a.candidate.tier] - TIER_RANK[b.candidate.tier] ||
+    rank(a.candidate.tier) - rank(b.candidate.tier) ||
     a.price.totalCents - b.price.totalCents ||
+    // At the same price the closer match wins.
+    TIER_RANK[a.candidate.tier] - TIER_RANK[b.candidate.tier] ||
     compareText(a.candidate.retailerId, b.candidate.retailerId) ||
     compareText(a.candidate.productId, b.candidate.productId)
   );
@@ -71,7 +89,7 @@ function keepsInMode(option: Option, mode: Mode): boolean {
   return true;
 }
 
-function prepare(item: ListItem, mode: Mode): Prepared {
+function prepare(item: ListItem, mode: Mode, rank: Rank): Prepared {
   const options: Option[] = [];
   for (const candidate of item.candidates) {
     const price = priceCandidate(candidate, item.quantity);
@@ -86,7 +104,7 @@ function prepare(item: ListItem, mode: Mode): Prepared {
     item.pinnedRetailerId === null ? kept : kept.filter((o) => o.candidate.retailerId === item.pinnedRetailerId);
   if (pinned.length === 0) return { item, options: pinned, unavailable: "pinned-unavailable" };
 
-  return { item, options: pinned.sort(compareOptions), unavailable: null };
+  return { item, options: pinned.sort((a, b) => compareOptions(a, b, rank)), unavailable: null };
 }
 
 function evaluate(prepared: Prepared[], chains: ReadonlySet<RetailerId>): Evaluation {
@@ -138,14 +156,14 @@ function bestEvaluation(prepared: Prepared[], options: Options): { best: Evaluat
   return { best, maxStoresExceeded: false };
 }
 
-function lineReason(prepared: Prepared, chosen: Option, chains: ReadonlySet<RetailerId>): LineReason {
+function lineReason(prepared: Prepared, chosen: Option, chains: ReadonlySet<RetailerId>, rank: Rank): LineReason {
   const { candidate, price } = chosen;
   if (prepared.item.pinnedRetailerId !== null) return { code: "pinned" };
   if (prepared.options.every((o) => o.candidate.retailerId === candidate.retailerId)) return { code: "only-store" };
 
   const inSet = prepared.options.filter((o) => o !== chosen && chains.has(o.candidate.retailerId));
-  const rank = TIER_RANK[candidate.tier];
-  if (inSet.some((o) => TIER_RANK[o.candidate.tier] > rank && o.price.totalCents < price.totalCents)) {
+  const chosenRank = rank(candidate.tier);
+  if (inSet.some((o) => rank(o.candidate.tier) > chosenRank && o.price.totalCents < price.totalCents)) {
     return { code: "closest-match" };
   }
   if (price.usedOffer) {
@@ -155,16 +173,20 @@ function lineReason(prepared: Prepared, chosen: Option, chains: ReadonlySet<Reta
       daysLeft: candidate.offer === null ? null : candidate.offer.daysLeft,
     };
   }
-  // Options are sorted, so the first one at another chain with the same tier is the next best.
+  // Options are sorted, so the first one at another chain with the same rank is the next best.
   const next = inSet.find(
-    (o) => o.candidate.retailerId !== candidate.retailerId && TIER_RANK[o.candidate.tier] === rank,
+    (o) => o.candidate.retailerId !== candidate.retailerId && rank(o.candidate.tier) === chosenRank,
   );
   return next === undefined
     ? { code: "cheapest", nextRetailerId: null, differenceCents: null }
-    : { code: "cheapest", nextRetailerId: next.candidate.retailerId, differenceCents: next.price.totalCents - price.totalCents };
+    : {
+        code: "cheapest",
+        nextRetailerId: next.candidate.retailerId,
+        differenceCents: next.price.totalCents - price.totalCents,
+      };
 }
 
-function toLine(prepared: Prepared, chosen: Option, chains: ReadonlySet<RetailerId>): PlanLine {
+function toLine(prepared: Prepared, chosen: Option, chains: ReadonlySet<RetailerId>, rank: Rank): PlanLine {
   const { item } = prepared;
   const { price } = chosen;
   return {
@@ -177,7 +199,7 @@ function toLine(prepared: Prepared, chosen: Option, chains: ReadonlySet<Retailer
     regularTotalCents: price.regularTotalCents,
     usedOffer: price.usedOffer,
     assumed: price.assumed,
-    reason: lineReason(prepared, chosen, chains),
+    reason: lineReason(prepared, chosen, chains, rank),
     hint: price.hint,
   };
 }
@@ -209,7 +231,12 @@ function singleStores(prepared: Prepared[]): { store: SingleStore; covered: Set<
         if (choice === null) missingItemIds.push(prepared[i].item.id);
         else covered.add(prepared[i].item.id);
       });
-      const store = { retailerId, totalCents: evaluation.totalCents, coveredCount: evaluation.coveredCount, missingItemIds };
+      const store = {
+        retailerId,
+        totalCents: evaluation.totalCents,
+        coveredCount: evaluation.coveredCount,
+        missingItemIds,
+      };
       return { store, covered };
     })
     .sort(
@@ -242,6 +269,9 @@ function validate(items: ListItem[], options: Options): void {
     throw new RangeError(`maxStores must be 1, 2 or 3, got ${options.maxStores}`);
   }
   if (!MODES.includes(options.mode)) throw new RangeError(`unknown mode ${JSON.stringify(options.mode)}`);
+  if (options.substitutes !== undefined && !SUBSTITUTES.includes(options.substitutes)) {
+    throw new RangeError(`unknown substitutes ${JSON.stringify(options.substitutes)}`);
+  }
   assertCents("budgetCents", options.budgetCents);
   const ids = new Set<string>();
   for (const item of items) {
@@ -253,7 +283,8 @@ function validate(items: ListItem[], options: Options): void {
 
 /**
  * Cheapest way to buy a shopping list at 1 to `options.maxStores` chains. Items keep their
- * closest match within the chosen chains; pinned items stay at their chain, whose chain is then
+ * closest match within the chosen chains, unless `options.substitutes` lets the same or a very
+ * similar product compete on price; pinned items stay at their chain, whose chain is then
  * always visited. Sets of chains are ranked by items covered, then by total (or, for
  * "fewest-stores", by number of stops first). All amounts are integer cents; unit prices are
  * rounded half up. The result is the same whatever the order of each item's candidates.
@@ -261,7 +292,8 @@ function validate(items: ListItem[], options: Options): void {
  */
 export function optimizeBasket(items: ListItem[], options: Options): Plan {
   validate(items, options);
-  const prepared = items.map((item) => prepare(item, options.mode));
+  const rank = rankFor(options.substitutes ?? "exact");
+  const prepared = items.map((item) => prepare(item, options.mode, rank));
   const { best, maxStoresExceeded } = bestEvaluation(prepared, options);
 
   const chains = new Set(best.chains);
@@ -269,7 +301,7 @@ export function optimizeBasket(items: ListItem[], options: Options): Plan {
   const missing: MissingItem[] = [];
   best.choices.forEach((choice, i) => {
     const { item, unavailable } = prepared[i];
-    if (choice !== null) lines.push(toLine(prepared[i], choice, chains));
+    if (choice !== null) lines.push(toLine(prepared[i], choice, chains, rank));
     else missing.push({ itemId: item.id, label: item.label, reason: unavailable ?? "not-in-chosen-stores" });
   });
 

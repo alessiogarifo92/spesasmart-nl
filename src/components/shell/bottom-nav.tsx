@@ -12,7 +12,9 @@ const items = [
 ] as const;
 
 function isCurrent(pathname: string, href: string): boolean {
-  return href === "/" ? pathname === "/" : pathname === href || pathname.startsWith(`${href}/`);
+  // The route is the plan in full: it belongs to the first tab.
+  if (href === "/") return pathname === "/" || pathname === "/plan";
+  return pathname === href || pathname.startsWith(`${href}/`);
 }
 
 export function BottomNav() {

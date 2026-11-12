@@ -4,3 +4,5 @@
 export * from "./types";
 export { priceCandidate } from "./price";
 export { optimizeBasket } from "./optimize";
+export { explainPlan, type PlanNote } from "./explain";
+export * from "./settings";
