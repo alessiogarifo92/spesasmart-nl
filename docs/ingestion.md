@@ -99,6 +99,36 @@ Consequences:
 - **No browser.** The ticket expected product names to need JavaScript. The captured page is server-rendered and carries the names, so the adapter uses the plain HTTP client like the others. This was seen on a rendered capture only: if the first live run fails with "no offer cards with a title found", the names do need a browser after all and the adapter has to be extended.
 - Next week's offers load on a button and are not collected. The capture had 106 cards.
 
+### Vomar (`vomar`)
+
+Vomar publishes its offers only as a designed flyer, with no offer page. The adapter reads the text of the flyer's PDF with its position on the page and keeps an offer only when its parts are found without doubt and its figures agree. Nobody reviews the result, so the rule is precision before coverage: what is not certain is not stored.
+
+| | |
+|---|---|
+| Requests | three per run, one run a day: `https://www.vomar.nl/folders` (finds the one embedded weekly flyer), `<flyer>/data.json` on `view.publitas.com` (names the PDF), the PDF itself |
+| robots.txt | vomar.nl allows `/folders` (copy in `fixtures/robots.txt`, checked by a test); `view.publitas.com` has none (404, read as allow-all) |
+| PDF | about 90 MB, read in memory (about 600 MB of RAM, 4 seconds) and dropped. Only text is read: no page is drawn, no image decoded, nothing of the file is stored |
+| Guards | exactly one flyer on the folders page; the description must be Vomar's and the PDF an https file on `view.publitas.com`; 250 MB limit; fewer than 10 offers fails the run (layout changed) |
+
+How an offer is read (`layout.ts`), from the flyer of week 46 of 2026:
+
+- A large price (euros and raised cents) with exactly one small former price right above it, alone on its line.
+- The product text is the nearest block left of or above the price. If a second block is nearly as close, or the block is as close to another price, the offer is skipped.
+- The badge above the price ("1+1 GRATIS", "2 STUKS", "XL PAK") is kept as printed.
+- The last day comes from "Acties zijn geldig t/m zaterdag 14 november". Offers inside the "Alleen op donderdag, vrijdag & zaterdag" box take the dates printed on the box.
+
+How it is checked (`index.ts`); a failure stores nothing and is reported as a run error:
+
+- The offer price must be below the former price (below the lowest one of a range).
+- `N+M GRATIS`: the former price is that of the whole set and must divide into whole cents; the offer price must equal N items.
+- `N% KORTING`: the former price less the percentage must give the offer price, to the cent.
+- `N STUKS` / `FLESSEN` / `PAKKEN`: a price for N items, unless the small print gives N as the size of one pack ("Tray 30 stuks").
+- "Prijsvoorbeeld" / "Per stuk van … tot …": the prices belong to one product of a range. The mechanic is kept, the two prices are checked and then left out, and the offer is stored as "to be verified" because its price depends on the product.
+- A badge with a mechanic that is not read ("2E HALVE PRIJS") fails the offer.
+- A flyer that ends more than six days ahead may not have started: its offers wait for a later run. The first day of the week is not printed and stays unknown.
+
+Not collected: offers without a former price (the last pages of the flyer), offers whose price is drawn as artwork, Dagknallers (a separate flyer), next week's flyer. In week 46 the adapter read 84 offers and skipped 63 prices; 78 were stored as verified and 6 as to be verified. Brand and EAN are unknown, so products link across chains only by name and size.
+
 ## Commands
 
 | Command | What it does |

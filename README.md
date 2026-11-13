@@ -2,7 +2,7 @@
 
 Web app mobile-first (PWA installabile) che mostra le offerte dei supermercati nei Paesi Bassi, confronta lo stesso prodotto tra catene e trasforma la lista della spesa in un giro di 1, 2 o 3 negozi. Progetto personale e di portfolio. **[English below](#english).**
 
-> **Stato: MVP su `main`, demo online su https://spesasmart-nl.vercel.app.** L'app parte con dati demo inventati, etichettati "Demodata". Gli adapter reali (Albert Heijn, Jumbo, Dirk) sono scritti e testati su copie delle pagine, ma spenti e mai eseguiti dal vivo. Vomar resta demo. Dettagli in [docs/limits.md](docs/limits.md).
+> **Stato: MVP su `main`, demo online su https://spesasmart-nl.vercel.app.** L'app parte con dati demo inventati, etichettati "Demodata". Gli adapter reali (Albert Heijn, Jumbo, Dirk, Vomar) sono scritti e testati su copie delle pagine, ma spenti e mai eseguiti dal vivo. Dettagli in [docs/limits.md](docs/limits.md).
 
 ## Cosa fa
 
@@ -82,7 +82,7 @@ Il prezzo finale e la disponibilità sono confermati dal negozio o dal servizio 
 
 A mobile-first web app (installable PWA) that shows supermarket offers in the Netherlands, compares the same product across chains and turns a shopping list into a trip to 1, 2 or 3 stores. A personal and portfolio project.
 
-> **Status: MVP on `main`, hosted demo at https://spesasmart-nl.vercel.app.** The app starts with invented demo data, labelled "Demodata". The real adapters (Albert Heijn, Jumbo, Dirk) are written and tested against copies of the pages, but switched off and never run live. Vomar stays demo. Details in [docs/limits.md](docs/limits.md).
+> **Status: MVP on `main`, hosted demo at https://spesasmart-nl.vercel.app.** The app starts with invented demo data, labelled "Demodata". The real adapters (Albert Heijn, Jumbo, Dirk, Vomar) are written and tested against copies of the pages, but switched off and never run live. Details in [docs/limits.md](docs/limits.md).
 
 ## What it does
 

@@ -7,8 +7,16 @@ import { isAllowed, parseRobots, type RobotsRules } from "./robots";
  */
 
 export type HttpResponse = { status: number; url: string; text: string };
+export type HttpBytesResponse = { status: number; url: string; bytes: Uint8Array };
 
-export type HttpClient = { get(url: string): Promise<HttpResponse> };
+/** Limits for one binary download; a large file needs more time than a page. */
+export type BytesOptions = { timeoutMs?: number; maxBytes?: number };
+
+export type HttpClient = {
+  get(url: string): Promise<HttpResponse>;
+  /** The same request rules as `get`, for a file that is not text (a PDF). */
+  getBytes(url: string, options?: BytesOptions): Promise<HttpBytesResponse>;
+};
 
 export type HttpClientOptions = {
   /** Identifiable User-Agent with a contact address or URL. */
@@ -41,6 +49,20 @@ export class RobotsDisallowedError extends Error {
     this.name = "RobotsDisallowedError";
   }
 }
+
+/** The file is larger than the caller allows; nothing of it is kept. */
+export class ResponseTooLargeError extends Error {
+  constructor(
+    readonly url: string,
+    readonly maxBytes: number,
+  ) {
+    super(`GET ${url} answered with more than ${maxBytes} bytes`);
+    this.name = "ResponseTooLargeError";
+  }
+}
+
+/** Largest binary download when the caller sets no limit (20 MB). */
+const DEFAULT_MAX_BYTES = 20_000_000;
 
 /** The request kept failing: `status` is the last HTTP status, null for a network error or timeout. */
 export class HttpRequestError extends Error {
@@ -120,7 +142,7 @@ export function createHttpClient(options: HttpClientOptions): HttpClient {
     return turn;
   }
 
-  async function attempt(url: string, host: string): Promise<Response> {
+  async function attempt(url: string, host: string, timeout = timeoutMs): Promise<Response> {
     await throttle(host);
     return fetch(url, {
       method: "GET",
@@ -128,7 +150,7 @@ export function createHttpClient(options: HttpClientOptions): HttpClient {
       credentials: "omit",
       // Redirects are followed by hand, so every hop passes the robots.txt check and the rate limit.
       redirect: "manual",
-      signal: AbortSignal.timeout(timeoutMs),
+      signal: AbortSignal.timeout(timeout),
     });
   }
 
@@ -171,7 +193,12 @@ export function createHttpClient(options: HttpClientOptions): HttpClient {
     return backoffBaseMs * 2 ** attemptIndex + Math.floor(random() * backoffBaseMs);
   }
 
-  async function get(url: string, redirectsLeft: number): Promise<HttpResponse> {
+  async function request<Body>(
+    url: string,
+    redirectsLeft: number,
+    read: (response: Response) => Promise<Body>,
+    timeout?: number,
+  ): Promise<{ status: number; url: string; body: Body }> {
     const parsed = parseUrl(url);
     const policy = await policyFor(parsed);
     if (policy.kind === "blocked") throw new RobotsDisallowedError(url, policy.reason);
@@ -182,11 +209,12 @@ export function createHttpClient(options: HttpClientOptions): HttpClient {
     for (let attemptIndex = 0; ; attemptIndex++) {
       const last = attemptIndex >= maxRetries;
       let response: Response;
-      let text: string;
+      let body: Body;
       try {
-        response = await attempt(url, parsed.host);
-        text = await response.text();
+        response = await attempt(url, parsed.host, timeout);
+        body = await read(response);
       } catch (error) {
+        if (error instanceof ResponseTooLargeError) throw error;
         if (last) throw new HttpRequestError(url, null, error);
         await sleep(backoff(attemptIndex));
         continue;
@@ -199,19 +227,42 @@ export function createHttpClient(options: HttpClientOptions): HttpClient {
       if (REDIRECT_STATUSES.has(response.status)) {
         const location = response.headers.get("Location");
         if (!location || redirectsLeft === 0) throw new HttpRequestError(url, response.status);
-        return get(new URL(location, url).href, redirectsLeft - 1);
+        return request(new URL(location, url).href, redirectsLeft - 1, read, timeout);
       }
-      return { status: response.status, url, text };
+      return { status: response.status, url, body };
     }
   }
 
-  return { get: (url) => get(url, MAX_REDIRECTS) };
+  return {
+    async get(url) {
+      const { status, url: finalUrl, body } = await request(url, MAX_REDIRECTS, (response) => response.text());
+      return { status, url: finalUrl, text: body };
+    },
+    async getBytes(url, options = {}) {
+      const maxBytes = options.maxBytes ?? DEFAULT_MAX_BYTES;
+      const read = async (response: Response) => {
+        const declared = Number(response.headers.get("Content-Length") ?? "0");
+        if (declared > maxBytes) {
+          await response.body?.cancel();
+          throw new ResponseTooLargeError(url, maxBytes);
+        }
+        const bytes = new Uint8Array(await response.arrayBuffer());
+        if (bytes.byteLength > maxBytes) throw new ResponseTooLargeError(url, maxBytes);
+        return bytes;
+      };
+      const { status, url: finalUrl, body } = await request(url, MAX_REDIRECTS, read, options.timeoutMs);
+      return { status, url: finalUrl, bytes: body };
+    },
+  };
 }
 
 /** A client that refuses every request; for runs that must stay offline (mock adapters, the seed). */
 export function createOfflineHttpClient(): HttpClient {
   return {
     async get(url) {
+      throw new Error(`HTTP client is offline: refused GET ${url}`);
+    },
+    async getBytes(url) {
       throw new Error(`HTTP client is offline: refused GET ${url}`);
     },
   };

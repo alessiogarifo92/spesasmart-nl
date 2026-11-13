@@ -120,6 +120,9 @@ describe("adapter switch", () => {
       get: async () => {
         throw new Error("no requests in tests");
       },
+      getBytes: async () => {
+        throw new Error("no requests in tests");
+      },
     }),
     // Later than any other run in the test database, so these are among the latest shown.
     now: () => new Date("2099-01-01T10:00:00Z"),
