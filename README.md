@@ -68,6 +68,7 @@ Leggi prima [docs/limits.md](docs/limits.md). Poi: metti l'id in `INGESTION_ENAB
 | [docs/data-model.md](docs/data-model.md) | modello dati e scelte |
 | [docs/ingestion.md](docs/ingestion.md) | pipeline di raccolta e i tre adapter reali |
 | [docs/adding-a-chain.md](docs/adding-a-chain.md) | come aggiungere una catena |
+| [docs/deploy.md](docs/deploy.md) | demo online su Vercel e Supabase |
 | [docs/limits.md](docs/limits.md) | limiti legali e tecnici: cosa è stato verificato e cosa no |
 | [docs/roadmap.md](docs/roadmap.md) | cosa viene dopo |
 | [DESIGN.md](DESIGN.md) | token e regole dell'interfaccia |

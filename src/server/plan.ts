@@ -1,3 +1,4 @@
+import { mapLimited } from "@/lib/concurrency";
 import type { PrismaClient } from "@/generated/prisma/client";
 import {
   optimizeBasket,
@@ -34,6 +35,8 @@ export type PlanView = {
 
 /** A typed item ("melk") is matched to names; this many results per item are considered. */
 const TEXT_CANDIDATES = 40;
+/** Searches for typed items that run at the same time while a plan is built. */
+const SEARCHES_AT_ONCE = 4;
 
 /**
  * What a typed item can be bought as: the results whose name has the words typed, and only
@@ -97,14 +100,18 @@ export async function buildPlan(
     link(row.candidateProductId, row.canonicalProductId, row.matchType);
   }
 
-  const queries = typed.map((item) => parseQuery(item.label, context ?? {}));
-  const [products, searches] = await Promise.all([
+  // One search per distinct label, a few at a time: a full list of typed items must not
+  // open a hundred queries at once on every page view.
+  const labels = [...new Set(typed.map((item) => item.label))];
+  const [products, found] = await Promise.all([
     loadProducts(db, [...pickedIds, ...[...substitutes.values()].flatMap((known) => [...known.keys()])], today),
-    Promise.all(queries.map((query) => searchProducts(db, { query, today, limit: TEXT_CANDIDATES }))),
+    mapLimited(labels, SEARCHES_AT_ONCE, async (label) => {
+      const query = parseQuery(label, context ?? {});
+      return textMatches(await searchProducts(db, { query, today, limit: TEXT_CANDIDATES }), query.terms);
+    }),
   ]);
-  const typedMatches = new Map(
-    typed.map((item, index) => [item.id, textMatches(searches[index]!, queries[index]!.terms)]),
-  );
+  const byLabel = new Map(labels.map((label, index) => [label, found[index]!]));
+  const typedMatches = new Map(typed.map((item) => [item.id, byLabel.get(item.label)!]));
 
   const retailers: Record<string, string> = {};
   const demo = new Set<string>();

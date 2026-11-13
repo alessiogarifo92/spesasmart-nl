@@ -8,8 +8,19 @@ import { normalizeName } from "@/domain/search";
  * of another device: an id that is not yours behaves exactly like one that does not exist.
  */
 
-/** Ceilings that keep one device from filling the database. */
-export const LIST_LIMITS = { lists: 20, items: 100, nameLength: 40, labelLength: 80, quantity: 99 } as const;
+/**
+ * Ceilings that keep one device from filling the database. A device is only a cookie, so
+ * `totalLists` is the one ceiling that holds against a script that never sends it back:
+ * past it nobody can start a new list until old ones are removed.
+ */
+export const LIST_LIMITS = {
+  lists: 20,
+  items: 100,
+  nameLength: 40,
+  labelLength: 80,
+  quantity: 99,
+  totalLists: 20_000,
+} as const;
 
 export type ListSummary = { id: string; name: string; itemCount: number };
 
@@ -27,7 +38,7 @@ export type ListItemView = {
 
 export type ListView = { id: string; name: string; items: ListItemView[] };
 
-export type ListError = "not-found" | "invalid" | "too-many-lists" | "too-many-items";
+export type ListError = "not-found" | "invalid" | "too-many-lists" | "too-many-items" | "full";
 
 const DEVICE_ID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 
@@ -100,10 +111,12 @@ export async function createList(
   db: PrismaClient,
   deviceId: string,
   name: string,
+  totalLists: number = LIST_LIMITS.totalLists,
 ): Promise<Result<{ id: string }, ListError>> {
   const clean = cleanText(name, LIST_LIMITS.nameLength);
   if (clean === null) return fail("invalid");
   if ((await db.shoppingList.count({ where: { deviceId } })) >= LIST_LIMITS.lists) return fail("too-many-lists");
+  if ((await db.shoppingList.count()) >= totalLists) return fail("full");
   const list = await db.shoppingList.create({ data: { deviceId, name: clean }, select: { id: true } });
   return ok(list);
 }

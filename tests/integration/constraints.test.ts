@@ -182,3 +182,12 @@ describe("database constraints", () => {
     });
   });
 });
+
+describe("row level security", () => {
+  it("is on for every table, so a hosted data API cannot read or write them", async () => {
+    const open = await db.$queryRaw<{ relname: string }[]>`
+      SELECT c.relname FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace
+      WHERE n.nspname = 'public' AND c.relkind = 'r' AND NOT c.relrowsecurity`;
+    expect(open.map((row) => row.relname)).toEqual([]);
+  });
+});

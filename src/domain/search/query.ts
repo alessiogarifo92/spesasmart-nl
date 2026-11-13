@@ -29,7 +29,8 @@ export type ParsedQuery = {
   attributes: string[];
 };
 
-const UNIT = "(?:kg|kilo|kilogram|g|gr|gram|grammi|l|lt|liter|litre|litri|litro|ml|cl|dl|stuks?|st|pezzi|pieces?|rollen|rol)";
+const UNIT =
+  "(?:kg|kilo|kilogram|g|gr|gram|grammi|l|lt|liter|litre|litri|litro|ml|cl|dl|stuks?|st|pezzi|pieces?|rollen|rol)";
 const QUANTITY = new RegExp(`(?:^| )((?:\\d+ ?x ?)?\\d+(?:,\\d+)? ?${UNIT})(?= |$)`);
 
 /** Italian and English unit words rewritten to the Dutch ones `parseQuantity` reads. */
@@ -75,6 +76,9 @@ const EMPTY: Omit<ParsedQuery, "raw"> = {
   attributes: [],
 };
 
+/** Words of a query that are searched; each one is a condition in the search query, so the rest is dropped. */
+export const MAX_TERMS = 8;
+
 /**
  * Splits a free-text search into what it asks for. Nothing is guessed: a part
  * that is not recognised as a barcode, size, brand, category or flag stays a
@@ -114,12 +118,17 @@ export function parseQuery(input: string, context: SearchContext = {}): ParsedQu
   // A category name narrows the search but stays a term too: "melk" is both a word and a shelf.
   const category = takeKnown(
     text,
-    (context.categories ?? []).flatMap(({ slug, names }) => names.map((name) => ({ key: normalizeName(name), value: slug }))),
+    (context.categories ?? []).flatMap(({ slug, names }) =>
+      names.map((name) => ({ key: normalizeName(name), value: slug })),
+    ),
   );
   if (category.value !== null && category.text !== "") text = category.text;
 
   text = replacePhrases(text, PRODUCT_SYNONYMS);
-  const terms = [...new Set(text.split(" ").filter((word) => word !== "" && !STOP_WORDS.has(word)))];
+  const terms = [...new Set(text.split(" ").filter((word) => word !== "" && !STOP_WORDS.has(word)))].slice(
+    0,
+    MAX_TERMS,
+  );
 
   return {
     raw,

@@ -21,3 +21,14 @@ test.describe("with an English browser", () => {
     await expect(page.locator("html")).toHaveAttribute("lang", "en");
   });
 });
+
+test("every response carries the security headers and does not advertise the framework", async ({ request }) => {
+  for (const path of ["/", "/offers", "/manifest.webmanifest"]) {
+    const headers = (await request.get(path)).headers();
+    expect(headers["x-frame-options"]).toBe("DENY");
+    expect(headers["content-security-policy"]).toBe("frame-ancestors 'none'");
+    expect(headers["x-content-type-options"]).toBe("nosniff");
+    expect(headers["referrer-policy"]).toBe("strict-origin-when-cross-origin");
+    expect(headers["x-powered-by"]).toBeUndefined();
+  }
+});

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { isEmptyQuery, parseQuery } from "./query";
+import { isEmptyQuery, parseQuery, MAX_TERMS } from "./query";
 
 const context = {
   brands: ["Molenhof", "Bruisbron", "Frisblad"],
@@ -22,7 +22,10 @@ describe("parseQuery: size", () => {
   });
 
   it("reads multipacks, decimals and compact notation", () => {
-    expect(parseQuery("cola 6 x 330 ml")).toMatchObject({ terms: ["cola"], quantity: { count: 6, amount: 330, totalAmount: 1980 } });
+    expect(parseQuery("cola 6 x 330 ml")).toMatchObject({
+      terms: ["cola"],
+      quantity: { count: 6, amount: 330, totalAmount: 1980 },
+    });
     expect(parseQuery("cola 6x330ml").quantity).toMatchObject({ count: 6, amount: 330, unit: "ml" });
     expect(parseQuery("cola 1,5 l").quantity).toMatchObject({ amount: 1500, unit: "ml" });
     expect(parseQuery("cola 1.5 L").quantity).toMatchObject({ amount: 1500, unit: "ml" });
@@ -114,7 +117,11 @@ describe("parseQuery: brand and category", () => {
   });
 
   it("knows no brands or categories without context", () => {
-    expect(parseQuery("molenhof dranken")).toMatchObject({ brand: null, categorySlug: null, terms: ["molenhof", "dranken"] });
+    expect(parseQuery("molenhof dranken")).toMatchObject({
+      brand: null,
+      categorySlug: null,
+      terms: ["molenhof", "dranken"],
+    });
   });
 });
 
@@ -136,5 +143,11 @@ describe("parseQuery: edge cases", () => {
 
   it("keeps the query as typed in raw", () => {
     expect(parseQuery("  Latte 1 Litro ").raw).toBe("Latte 1 Litro");
+  });
+
+  it("searches the first eight words of a long query and drops the rest", () => {
+    const query = parseQuery("b c d f g h j k l m n p");
+    expect(query.terms).toEqual(["b", "c", "d", "f", "g", "h", "j", "k"]);
+    expect(MAX_TERMS).toBe(8);
   });
 });

@@ -221,6 +221,15 @@ describe("shopping lists", () => {
     expect(await listsOf(db, stranger)).toEqual([]);
   });
 
+  it("refuses a new list once all devices together hold the ceiling, and tells it apart from the device's own limit", async () => {
+    const me = device();
+    const total = await db.shoppingList.count();
+    // Other test files may add lists meanwhile: any count at or above the ceiling refuses.
+    expect(await createList(db, me, "Vol", total)).toEqual({ ok: false, reason: "full" });
+    expect(await addItem(db, me, { ...defaults, label: "melk" })).toMatchObject({ ok: true });
+    expect(await createList(db, me, "Past nog", total + 1_000)).toMatchObject({ ok: true });
+  });
+
   it("stops at the list and item limits", async () => {
     const me = device();
     for (let index = 0; index < LIST_LIMITS.lists; index++) await createList(db, me, `Lijst ${index}`);

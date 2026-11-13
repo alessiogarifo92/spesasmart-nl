@@ -10,6 +10,7 @@ export function useListErrors() {
     "not-found": t("errorNotFound"),
     "too-many-items": t("errorTooManyItems"),
     "too-many-lists": t("errorTooManyLists"),
+    full: t("errorFull"),
   };
 }
 
