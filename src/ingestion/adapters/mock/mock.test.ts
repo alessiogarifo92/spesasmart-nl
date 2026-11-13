@@ -9,7 +9,7 @@ function context(today = "2026-11-11") {
   const get = vi.fn(async () => {
     throw new Error("mock adapters make no requests");
   });
-  const ctx: AdapterContext = { http: { get }, today, now: new Date(`${today}T08:00:00Z`) };
+  const ctx: AdapterContext = { http: { get, getBytes: vi.fn() }, today, now: new Date(`${today}T08:00:00Z`) };
   return { ctx, get };
 }
 

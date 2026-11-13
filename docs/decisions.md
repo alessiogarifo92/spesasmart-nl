@@ -40,13 +40,16 @@ Scraping rules, binding on every adapter:
 - Identifiable User-Agent with a contact address; robots.txt honoured on every run; rate limit, retry with exponential backoff, timeout.
 - No retailer images, logos or whole flyers stored or republished: store prices, product names, dates, promotion mechanics and the source URL.
 - No private or reverse-engineered mobile APIs, no login-gated pages, no bypassing of protections.
+- Flyers (Vomar, decided by the user on 2026-11-13): a chain that publishes offers only as a flyer may be read from the flyer's PDF, through the two public files its viewer loads (`data.json`, the PDF). This is the one exception to "offer pages only" and it needs the user's approval per chain. The file is read in memory; no page, image or text beyond names, prices, dates and mechanics is kept.
+- No human reviews collected offers (user, 2026-11-13). An adapter therefore stores only what it can read without doubt and check against itself; anything else is dropped. "To be verified" is left for offers whose content is certain and whose price depends on the product chosen (a mechanic on a range).
 - Every adapter has a kill switch. A takedown request from a chain means that adapter is switched off the same day.
 - Demo data is always labelled as demo data in the interface.
+- The first-party device cookie (shopping list, no account) was accepted by the user on 2026-11-13.
 
 Observed on real pages:
 
 - Promotion weeks differ per chain (Jumbo Wednesday to Tuesday, Vomar Sunday to Saturday): validity is stored per offer, never assumed per calendar week.
-- Jumbo's offer page carries mechanics and dates in the HTML. Vomar's weekly flyer is served through Publitas and includes Dagknallers. Dirk's offer page has prices in the static HTML but product names need JavaScript rendering.
+- Jumbo's offer page carries mechanics and dates in the HTML. Vomar's weekly flyer is served through Publitas as a PDF with a text layer and no product data; Dagknallers are a separate flyer. Dirk's offer page has prices in the static HTML but product names need JavaScript rendering.
 
 Not legal advice. A commercial launch would need a lawyer and an official feed or agreement from at least one chain first.
 

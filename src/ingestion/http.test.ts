@@ -3,6 +3,7 @@ import {
   createHttpClient,
   createOfflineHttpClient,
   HttpRequestError,
+  ResponseTooLargeError,
   RobotsDisallowedError,
   type HttpClientOptions,
 } from "./http";
@@ -314,5 +315,63 @@ describe("createHttpClient", () => {
 describe("createOfflineHttpClient", () => {
   it("refuses every request", async () => {
     await expect(createOfflineHttpClient().get("https://shop.example.test/")).rejects.toThrow(/offline/);
+  });
+});
+
+describe("getBytes", () => {
+  const robots404 = (url: string) => url.endsWith("/robots.txt");
+  const bytes = (values: number[], headers: Record<string, string> = {}) =>
+    new Response(new Uint8Array(values), { status: 200, headers });
+
+  it("returns the file as bytes, after the same robots.txt check as a page", async () => {
+    const { client, calls } = harness((url) => (robots404(url) ? status(404) : bytes([37, 80, 68, 70])), {
+      minIntervalMs: 0,
+    });
+    const response = await client.getBytes("https://files.example.test/a.pdf");
+    expect([...response.bytes]).toEqual([37, 80, 68, 70]);
+    expect(response.status).toBe(200);
+    expect(calls.map((call) => call.url)).toEqual([
+      "https://files.example.test/robots.txt",
+      "https://files.example.test/a.pdf",
+    ]);
+  });
+
+  it("refuses a file robots.txt disallows without requesting it", async () => {
+    const { client, pageCalls } = harness(
+      (url) => (robots404(url) ? ok("User-agent: *\nDisallow: /private/") : bytes([1])),
+      { minIntervalMs: 0 },
+    );
+    await expect(client.getBytes("https://files.example.test/private/a.pdf")).rejects.toBeInstanceOf(
+      RobotsDisallowedError,
+    );
+    expect(pageCalls()).toHaveLength(0);
+  });
+
+  it("stops at the size limit: declared in the header, or found when read", async () => {
+    const declared = harness((url) => (robots404(url) ? status(404) : bytes([1, 2, 3], { "Content-Length": "5000" })), {
+      minIntervalMs: 0,
+    });
+    await expect(declared.client.getBytes("https://files.example.test/a.pdf", { maxBytes: 100 })).rejects.toThrow(
+      /more than 100 bytes/,
+    );
+    const actual = harness((url) => (robots404(url) ? status(404) : bytes([1, 2, 3, 4, 5])), { minIntervalMs: 0 });
+    await expect(actual.client.getBytes("https://files.example.test/a.pdf", { maxBytes: 4 })).rejects.toBeInstanceOf(
+      ResponseTooLargeError,
+    );
+    // Too large is final: it is not retried.
+    expect(actual.pageCalls()).toHaveLength(1);
+  });
+
+  it("retries a failing download like a page", async () => {
+    const { client, pageCalls } = harness(
+      (url, attempt) => (robots404(url) ? status(404) : attempt === 0 ? status(503) : bytes([9])),
+      { minIntervalMs: 0 },
+    );
+    expect([...(await client.getBytes("https://files.example.test/a.pdf")).bytes]).toEqual([9]);
+    expect(pageCalls()).toHaveLength(2);
+  });
+
+  it("the offline client refuses", async () => {
+    await expect(createOfflineHttpClient().getBytes("https://files.example.test/a.pdf")).rejects.toThrow(/offline/);
   });
 });

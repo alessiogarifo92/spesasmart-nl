@@ -13,7 +13,7 @@ const TODAY = "2026-11-12";
 const WEEK = { start: "2026-11-08", end: "2026-11-14", approximate: false };
 
 function ctx(get: AdapterContext["http"]["get"] = vi.fn(), today = TODAY): AdapterContext {
-  return { http: { get }, today, now: new Date("2026-11-12T08:00:00Z") };
+  return { http: { get, getBytes: vi.fn() }, today, now: new Date("2026-11-12T08:00:00Z") };
 }
 
 const raws = parseAhBonus(html, AH_BONUS_URL);

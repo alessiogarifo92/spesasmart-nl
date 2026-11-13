@@ -92,7 +92,7 @@ function deps(enabled: string[], overrides: Partial<RunnerDeps> = {}) {
   const get = vi.fn<HttpClient["get"]>(async () => {
     throw new Error("no requests in tests");
   });
-  const createHttp = vi.fn(() => ({ get }));
+  const createHttp = vi.fn((): HttpClient => ({ get, getBytes: vi.fn() }));
   return { deps: { db, createHttp, now: () => NOW, enabledAdapters: enabled, ...overrides } satisfies RunnerDeps, get, createHttp };
 }
 

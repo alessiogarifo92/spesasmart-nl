@@ -5,8 +5,8 @@ Order of work after the MVP. Nothing here is started.
 ## Before real data is trusted
 
 1. Read the four chains' terms of use (`limits.md`).
-2. First live run of Dirk, Albert Heijn and Jumbo, checked by hand against the pages.
-3. Decide Vomar (issue #6): stay demo, drop the chain, or type its offers by hand.
+2. First live run of Dirk, Albert Heijn, Jumbo and Vomar, checked once against the pages before each adapter is switched on.
+3. Vomar (issue #6): the adapter reads the flyer PDF; watch the first weeks for a change of layout.
 4. Hide a chain's demo rows once its real adapter is on.
 
 ## Next

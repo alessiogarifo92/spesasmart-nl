@@ -12,7 +12,7 @@ const html = fixture("offers.html");
 const TODAY = "2026-11-12";
 
 function ctx(get: AdapterContext["http"]["get"] = vi.fn()): AdapterContext {
-  return { http: { get }, today: TODAY, now: new Date("2026-11-12T08:00:00Z") };
+  return { http: { get, getBytes: vi.fn() }, today: TODAY, now: new Date("2026-11-12T08:00:00Z") };
 }
 
 const raws = parseJumboOffers(html, JUMBO_OFFERS_URL);

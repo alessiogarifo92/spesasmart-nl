@@ -3,12 +3,13 @@ import { ahAdapter } from "./adapters/ah";
 import { dirkAdapter } from "./adapters/dirk";
 import { jumboAdapter } from "./adapters/jumbo";
 import { MOCK_ADAPTERS } from "./adapters/mock";
+import { vomarAdapter } from "./adapters/vomar";
 
 /**
  * Adapters that make real requests. Each one runs only when its id is listed in
  * INGESTION_ENABLED_ADAPTERS and its chain has `adapterEnabled` switched on.
  */
-export const REAL_ADAPTERS: readonly RetailerAdapter[] = [ahAdapter, jumboAdapter, dirkAdapter];
+export const REAL_ADAPTERS: readonly RetailerAdapter[] = [ahAdapter, jumboAdapter, vomarAdapter, dirkAdapter];
 
 /** Every adapter the worker schedules. */
 export function allAdapters(): RetailerAdapter[] {

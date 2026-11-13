@@ -10,6 +10,7 @@ describe("registry", () => {
       "mock:dirk",
       "ah",
       "jumbo",
+      "vomar",
       "dirk",
     ]);
   });
