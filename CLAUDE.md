@@ -12,7 +12,7 @@ This project relies on the repo `alessiogarifo92/claude-skills` (skills, agents,
    Claude Code detects agent files added to an existing `~/.claude/agents/` without a restart, but not when that directory did not exist at session start (typical in a fresh container). Then either restart the session once, or use the fallback above for this session. `templates/session-start-hook.sh` can install everything before the session starts (best effort).
 4. If the attach fails, say so in visible text and ask the user how to proceed. Never continue silently without the rules.
 
-Run / preview (manual gate): `docker compose up -d && npm install && npm run db:deploy && npm run db:seed && npm run dev`, then http://localhost:3000 (Dutch), `/en`, `/it`. No online preview: the manual gate uses committed screenshots under `docs/test-evidence/` plus these local commands. The user asked for one manual check at the end of the MVP: ticket branches merge into the integration branch `mvp`; nothing merges into `main` before that check.
+Run / preview (manual gate): `docker compose up -d && npm install && npm run db:deploy && npm run db:seed && npm run dev`, then http://localhost:3000 (Dutch), `/en`, `/it`. No online preview: the manual gate uses committed screenshots under `docs/test-evidence/` plus these local commands. Hosted demo: https://spesasmart-nl.vercel.app, redeployed on every push to `main` (`docs/deploy.md`). The MVP was merged into `main` on 2026-11-13; ticket branches start from `main`.
 
 Repo visibility: public (check: `gh api repos/<owner>/<repo> --jq .private`). Private means finite GitHub Actions minutes: `npm run verify` / `make verify` locally is the push gate, and a CI job that never starts follows `test-verification`'s billing fallback.
 

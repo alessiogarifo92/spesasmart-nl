@@ -2,7 +2,7 @@
 
 A way to try the MVP on a phone: the app on Vercel (Hobby plan), the database on Supabase (Free plan). Demo data only. Not a production setup: no worker, no Redis, no real adapter, no admin panel.
 
-State on 2026-11-13: **live at https://spesasmart-nl.vercel.app**, deployed from commit `4dc4491` of `mvp` with the Vercel CLI (`vercel deploy --prod`). Since then the project is connected to the GitHub repository: **every push to `mvp` (the production branch for now) redeploys** and reloads the demo data. Other branches are not built (the project's "Ignored Build Step" skips everything that is not production). Move the production branch to `main` in Vercel → Settings → Environments once `mvp` is merged.
+State on 2026-11-13: **live at https://spesasmart-nl.vercel.app**, deployed from commit `4dc4491` of `mvp` with the Vercel CLI (`vercel deploy --prod`). Since then the project is connected to the GitHub repository: **every push to `main` redeploys** and reloads the demo data. Other branches are not built (the project's "Ignored Build Step" skips everything that is not production).
 
 Checked on the live site after the deploy: `/offers` lists the demo offers dated from the deploy day, `/it/more/sources` reads the database, `/admin` answers 404, Supabase's security advisor reports nothing above "info". Not checked from the build environment: response headers on the live site, installing the PWA on a phone.
 

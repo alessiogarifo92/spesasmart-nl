@@ -62,3 +62,4 @@ Changes made while building it: the fourth navigation tab is "Meer" (language, a
 - **No online preview**: each ticket leaves committed screenshots and local commands.
 - **One manual check at the end of the MVP**, at the user's request: ticket branches merge into the integration branch `mvp`; `main` receives nothing until the user has checked `mvp`.
 - **Retailer hosts are not reachable from the cloud development container** (network policy). Adapter parsers are developed against reduced fixtures captured once; live runs are verified on the user's machine.
+- **MVP merged (2026-11-13)**: the user checked the hosted demo and asked for the merge; `mvp` was fast-forwarded into `main`. Later tickets branch from `main`.
