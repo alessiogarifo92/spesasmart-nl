@@ -2,7 +2,9 @@
 
 A way to try the MVP on a phone: the app on Vercel (Hobby plan), the database on Supabase (Free plan). Demo data only. Not a production setup: no worker, no Redis, no real adapter, no admin panel.
 
-State on 2026-11-13: the Supabase project exists and is empty; **the Vercel project does not exist yet** (it waits for a Vercel access token). Nothing is deployed.
+State on 2026-11-13: **live at https://spesasmart-nl.vercel.app**, deployed from commit `4dc4491` of `mvp` with the Vercel CLI (`vercel deploy --prod`). The project is not connected to GitHub: a push does not redeploy.
+
+Checked on the live site after the deploy: `/offers` lists the demo offers dated from the deploy day, `/it/more/sources` reads the database, `/admin` answers 404, Supabase's security advisor reports nothing above "info". Not checked from the build environment: response headers on the live site, installing the PWA on a phone.
 
 ## What runs where
 
@@ -20,7 +22,7 @@ State on 2026-11-13: the Supabase project exists and is empty; **the Vercel proj
 
 | Variable | Value |
 |---|---|
-| `DATABASE_URL` | Supabase pooler, transaction mode (port 6543), user `spesasmart_app.<project ref>`, `?sslmode=no-verify` |
+| `DATABASE_URL` | Supabase pooler, transaction mode (port 6543), host `aws-1-eu-central-1.pooler.supabase.com`, user `spesasmart_app.<project ref>`, `?sslmode=no-verify` |
 | `DIRECT_URL` | the same pooler in session mode (port 5432), `?sslmode=require`; used by the build for migrations only |
 
 Leave `ADMIN_TOKEN` and `INGESTION_ENABLED_ADAPTERS` unset: no admin panel, no real request.
@@ -32,7 +34,7 @@ The role's password is not stored anywhere in the repository. To replace it: `AL
 ## Protection
 
 - Every table has row level security on and no policy (migration `enable_row_level_security`), so Supabase's HTTP data API cannot read or write them. The app's role owns the tables and is not affected.
-- A script that never returns its cookie could fill the database with lists: `LIST_LIMITS.totalLists` (20 000) is the ceiling, and a Vercel Firewall rate limit on POST requests should be added once the project exists.
+- A script that never returns its cookie could fill the database with lists: `LIST_LIMITS.totalLists` (20 000) is the ceiling, and a Vercel Firewall rate limit on POST requests is still to be added (not done).
 - Building a plan searches a few typed items at a time (`SEARCHES_AT_ONCE`), so one page view cannot open a hundred queries at once.
 
 ## Rollback and removal

@@ -44,4 +44,4 @@ App:
 - The daily run limit counts successful runs only; a failing adapter can retry.
 - Admin: a copied session cookie stays valid until it expires (8 hours); the Secure flag depends on the proxy sending `X-Forwarded-Proto`.
 - Polish, Turkish and Arabic are prepared in the routing but not translated.
-- A hosted demo is prepared but not deployed (`deploy.md`); no backup or monitoring is set up.
+- A hosted demo with demo data runs on free plans (`deploy.md`); no backup or monitoring is set up.
